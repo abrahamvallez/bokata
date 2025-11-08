@@ -1,0 +1,43 @@
+{
+  "name": "bokata-agent",
+  "version": "2.0.0",
+  "description": "Bokata Slicer backend with LangGraph + LangChain + Express",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "vertical-slicing",
+    "langgraph",
+    "langchain",
+    "claude",
+    "hamburger-method"
+  ],
+  "author": "Abraham Vallez",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@langchain/anthropic": "^0.3.7",
+    "@langchain/core": "^0.3.21",
+    "@langchain/langgraph": "^0.2.20",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "uuid": "^11.0.3",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^22.10.2",
+    "@types/uuid": "^10.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
