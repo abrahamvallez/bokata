@@ -4,9 +4,18 @@
   "description": "LangChain/LangGraph TypeScript implementation of Bokata Slicer - Multi-agent system for feature decomposition using the Hamburger Method",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "bokata": "./dist/cli/bokata-cli.js",
+    "bokata-agent": "./dist/cli/bokata-cli.js"
+  },
   "scripts": {
-    "build": "tsc",
-    "dev": "ts-node src/index.ts",
+    "build": "tsc && chmod +x dist/cli/bokata-cli.js",
+    "dev": "ts-node src/cli/bokata-cli.ts",
+    "dev:example": "ts-node",
+    "bokata": "ts-node src/cli/bokata-cli.ts project",
+    "bokata-feature": "ts-node src/cli/bokata-cli.ts feature",
+    "bokata-paths": "ts-node src/cli/bokata-cli.ts paths",
+    "bokata-matrix": "ts-node src/cli/bokata-cli.ts matrix",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write \"src/**/*.ts\""
@@ -22,12 +31,14 @@
   "author": "Abraham Vallez",
   "license": "GPL-3.0",
   "dependencies": {
+    "@langchain/anthropic": "^0.3.0",
     "@langchain/core": "^0.3.0",
     "@langchain/langgraph": "^0.2.0",
-    "@langchain/anthropic": "^0.3.0",
+    "commander": "^14.0.2",
+    "dotenv": "^16.3.1",
+    "gray-matter": "^4.0.3",
     "langchain": "^0.3.0",
-    "zod": "^3.22.4",
-    "dotenv": "^16.3.1"
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
