@@ -1,4 +1,4 @@
-import { AgentConfig, AnalysisRequest, AnalysisResponse } from '../types';
+import { AgentConfig, AnalysisRequest, AnalysisResponse, WorkflowContext } from '../types';
 import {
   FeatureAnalyzerAgent,
   ProjectAnalyzerAgent,
@@ -6,6 +6,7 @@ import {
   MatrixGeneratorAgent
 } from '../agents';
 import { logger } from '../utils/logger';
+import { ContextManager } from '../utils/context-manager';
 
 /**
  * Bokata Orchestrator
@@ -123,13 +124,14 @@ export class BokataOrchestrator {
 
   /**
    * Run complete workflow: analyze + paths + matrix
-   * This is a simplified sequential execution without LangGraph state management
+   * Uses ContextManager to track agent execution and share context
    */
   async runCompleteWorkflow(input: any): Promise<{
     analysis: any;
     paths?: any[];
     matrix?: any;
     messages: Array<{ role: string; content: string; timestamp: Date }>;
+    context?: WorkflowContext;
   }> {
     logger.info('Running complete workflow');
 
@@ -141,44 +143,109 @@ export class BokataOrchestrator {
       }
     ];
 
+    // Determine workflow type
+    const workflowType: 'feature' | 'project' = 'features' in input ? 'project' : 'feature';
+
+    // Create context manager
+    const contextManager = new ContextManager(workflowType, input, {
+      description: 'Complete Bokata analysis workflow'
+    });
+
     try {
       // Step 1: Analyze feature or project
       let analysis;
-      if ('features' in input) {
-        analysis = await this.projectAnalyzer.execute(input);
+      if (workflowType === 'project') {
+        contextManager.setPhase('project-analysis');
+
+        // Set context on agent
+        this.projectAnalyzer.setContext(contextManager.getContext());
+
+        analysis = await contextManager.executeAgent(
+          'ProjectAnalyzer',
+          'analyzer',
+          input,
+          () => this.projectAnalyzer.execute(input)
+        );
+
         messages.push({
           role: 'assistant',
           content: 'Project analysis completed',
           timestamp: new Date()
         });
       } else {
-        analysis = await this.featureAnalyzer.execute(input);
+        contextManager.setPhase('feature-analysis');
+
+        // Set context on agent
+        this.featureAnalyzer.setContext(contextManager.getContext());
+
+        analysis = await contextManager.executeAgent(
+          'FeatureAnalyzer',
+          'analyzer',
+          input,
+          () => this.featureAnalyzer.execute(input)
+        );
+
         messages.push({
           role: 'assistant',
           content: 'Feature analysis completed',
           timestamp: new Date()
         });
 
+        // Store analysis in shared data for next agents
+        contextManager.setSharedData('analysis', analysis);
+
         // Step 2: Generate paths (only for features)
-        const paths = await this.pathsGenerator.execute(analysis);
+        contextManager.setPhase('paths-generation');
+        this.pathsGenerator.setContext(contextManager.getContext());
+
+        const paths = await contextManager.executeAgent(
+          'PathsGenerator',
+          'generator',
+          analysis,
+          () => this.pathsGenerator.execute(analysis)
+        );
+
         messages.push({
           role: 'assistant',
           content: `Generated ${paths.length} implementation paths`,
           timestamp: new Date()
         });
 
+        contextManager.setSharedData('paths', paths);
+
         // Step 3: Generate matrix (only for features)
-        const matrix = await this.matrixGenerator.execute(analysis);
+        contextManager.setPhase('matrix-generation');
+        this.matrixGenerator.setContext(contextManager.getContext());
+
+        const matrix = await contextManager.executeAgent(
+          'MatrixGenerator',
+          'generator',
+          analysis,
+          () => this.matrixGenerator.execute(analysis)
+        );
+
         messages.push({
           role: 'assistant',
           content: 'Compatibility matrix generated',
           timestamp: new Date()
         });
 
-        return { analysis, paths, matrix, messages };
+        contextManager.setSharedData('matrix', matrix);
+
+        return {
+          analysis,
+          paths,
+          matrix,
+          messages,
+          context: contextManager.getContext()
+        };
       }
 
-      return { analysis, messages };
+      return {
+        analysis,
+        messages,
+        context: contextManager.getContext()
+      };
     } catch (error) {
       logger.error('Workflow failed', error);
       messages.push({
@@ -188,5 +255,14 @@ export class BokataOrchestrator {
       });
       throw error;
     }
+  }
+
+  /**
+   * Get workflow context export for debugging
+   */
+  exportWorkflowContext(context: WorkflowContext): string {
+    const manager = new ContextManager('feature', {}, {});
+    manager['context'] = context; // Access private property for export
+    return manager.export();
   }
 }

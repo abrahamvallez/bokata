@@ -166,6 +166,41 @@ export enum OutputFormat {
 }
 
 /**
+ * Agent execution result for context tracking
+ */
+export interface AgentExecutionResult {
+  agentName: string;
+  agentType: string;
+  startTime: Date;
+  endTime: Date;
+  durationMs: number;
+  input: any;
+  output: any;
+  rawOutput?: string;
+  success: boolean;
+  error?: string;
+  metadata?: any;
+}
+
+/**
+ * Workflow context shared between agents
+ */
+export interface WorkflowContext {
+  workflowId: string;
+  workflowType: 'feature' | 'project' | 'paths' | 'matrix';
+  startTime: Date;
+  originalInput: any;
+  currentPhase: string;
+  agentResults: AgentExecutionResult[];
+  sharedData: {
+    [key: string]: any;
+  };
+  metadata: {
+    [key: string]: any;
+  };
+}
+
+/**
  * Configuration for the agent system
  */
 export interface AgentConfig {

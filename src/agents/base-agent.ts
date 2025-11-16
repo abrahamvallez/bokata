@@ -1,5 +1,5 @@
 import { ChatAnthropic } from '@langchain/anthropic';
-import { AgentConfig, OutputFormat } from '../types';
+import { AgentConfig, OutputFormat, WorkflowContext } from '../types';
 import { logger } from '../utils/logger';
 import { OutputFormatter } from '../utils/output-formatter';
 
@@ -9,9 +9,11 @@ import { OutputFormatter } from '../utils/output-formatter';
 export abstract class BaseAgent {
   protected model: ChatAnthropic;
   protected config: AgentConfig;
+  protected context?: WorkflowContext;
 
-  constructor(config: AgentConfig) {
+  constructor(config: AgentConfig, context?: WorkflowContext) {
     this.config = config;
+    this.context = context;
     this.model = new ChatAnthropic({
       modelName: config.modelName,
       temperature: config.temperature,
@@ -66,6 +68,60 @@ export abstract class BaseAgent {
    */
   protected getOutputFormat(): OutputFormat {
     return this.config.outputFormat || OutputFormat.MARKDOWN;
+  }
+
+  /**
+   * Set workflow context
+   */
+  setContext(context: WorkflowContext): void {
+    this.context = context;
+  }
+
+  /**
+   * Get workflow context
+   */
+  getContext(): WorkflowContext | undefined {
+    return this.context;
+  }
+
+  /**
+   * Get data from previous agent execution
+   */
+  protected getPreviousAgentResult(agentName: string): any {
+    if (!this.context) {
+      return undefined;
+    }
+
+    const result = this.context.agentResults.find(r => r.agentName === agentName);
+    return result?.output;
+  }
+
+  /**
+   * Get all previous agent results
+   */
+  protected getAllPreviousResults(): any[] {
+    if (!this.context) {
+      return [];
+    }
+
+    return this.context.agentResults.map(r => ({
+      agentName: r.agentName,
+      output: r.output
+    }));
+  }
+
+  /**
+   * Get shared data from context
+   */
+  protected getSharedData(key: string): any {
+    return this.context?.sharedData[key];
+  }
+
+  /**
+   * Check if we have context available
+   */
+  protected hasContext(): boolean {
+    return this.context !== undefined;
   }
 
   /**

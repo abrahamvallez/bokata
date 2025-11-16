@@ -416,6 +416,151 @@ El formato JSON es ideal para:
 - Pipelines de CI/CD
 - Almacenamiento en bases de datos
 
+## 🔄 Workflow Context - Contexto entre Agentes
+
+El sistema incluye un **ContextManager** que mantiene el contexto compartido entre agentes durante todo el flujo de trabajo. Esto permite:
+
+### Características del Contexto
+
+- **Trazabilidad Completa**: Seguimiento de cada agente ejecutado con timestamps y duración
+- **Datos Compartidos**: Los agentes pueden compartir datos entre ellos
+- **Historial de Ejecución**: Registro completo de inputs/outputs de cada agente
+- **Debugging Avanzado**: Exportar contexto completo en JSON para análisis
+- **Estado del Workflow**: Seguimiento de fases y progreso
+
+### Estructura del WorkflowContext
+
+```typescript
+interface WorkflowContext {
+  workflowId: string;              // ID único del flujo
+  workflowType: 'feature' | 'project' | 'paths' | 'matrix';
+  startTime: Date;                 // Inicio del workflow
+  originalInput: any;              // Input original
+  currentPhase: string;            // Fase actual
+  agentResults: AgentExecutionResult[];  // Resultados de cada agente
+  sharedData: { [key: string]: any };    // Datos compartidos
+  metadata: { [key: string]: any };      // Metadata adicional
+}
+```
+
+### Uso Automático
+
+El orquestador usa automáticamente el contexto:
+
+```typescript
+import { BokataAPI } from 'bokata-agent';
+
+const api = new BokataAPI();
+
+// El contexto se crea y mantiene automáticamente
+const result = await api.orchestrator.runCompleteWorkflow({
+  name: 'User Login',
+  description: 'Authentication feature'
+});
+
+// Acceder al contexto
+if (result.context) {
+  console.log('Workflow ID:', result.context.workflowId);
+  console.log('Agents executed:', result.context.agentResults.length);
+
+  // Ver resultados de cada agente
+  result.context.agentResults.forEach(agent => {
+    console.log(`${agent.agentName}: ${agent.durationMs}ms`);
+  });
+
+  // Acceder a datos compartidos
+  const analysis = result.context.sharedData['analysis'];
+}
+```
+
+### Uso Manual del ContextManager
+
+Para workflows personalizados:
+
+```typescript
+import { ContextManager } from 'bokata-agent/utils';
+
+// Crear contexto
+const context = new ContextManager('feature', inputData, {
+  author: 'Team',
+  project: 'MyApp'
+});
+
+// Establecer fase
+context.setPhase('analysis');
+
+// Ejecutar agente con tracking automático
+const result = await context.executeAgent(
+  'AnalyzerAgent',
+  'analyzer',
+  input,
+  async () => {
+    // Lógica del agente
+    return await someAgent.execute(input);
+  }
+);
+
+// Compartir datos entre agentes
+context.setSharedData('incrementCount', 10);
+
+// Siguiente agente puede acceder a los datos
+const count = context.getSharedData('incrementCount');
+
+// Obtener resumen
+const summary = context.getSummary();
+console.log(summary);
+// {
+//   workflowId: "...",
+//   totalAgents: 3,
+//   successfulAgents: 3,
+//   failedAgents: 0,
+//   totalDurationMs: 1523
+// }
+
+// Exportar contexto completo
+const exported = context.export();
+fs.writeFileSync('workflow-context.json', exported);
+```
+
+### Acceso al Contexto desde Agentes
+
+Los agentes pueden acceder al contexto compartido:
+
+```typescript
+class CustomAgent extends BaseAgent {
+  async execute(input: any): Promise<any> {
+    // Verificar si hay contexto
+    if (this.hasContext()) {
+      // Obtener resultado de agente anterior
+      const previousResult = this.getPreviousAgentResult('AnalyzerAgent');
+
+      // Obtener todos los resultados previos
+      const allResults = this.getAllPreviousResults();
+
+      // Obtener datos compartidos
+      const sharedData = this.getSharedData('incrementCount');
+
+      // Usar el contexto para mejorar la ejecución
+      console.log('Using previous analysis:', previousResult);
+    }
+
+    // Ejecutar lógica del agente
+    return await this.processInput(input);
+  }
+}
+```
+
+### Beneficios del Contexto
+
+1. **Mejor Coordinación**: Los agentes pueden usar resultados de agentes previos
+2. **Trazabilidad**: Registro completo de todo el flujo de trabajo
+3. **Debugging**: Exportar contexto para análisis offline
+4. **Persistencia**: Guardar y restaurar estados de workflow
+5. **Optimización**: Evitar re-cálculos usando datos compartidos
+6. **Monitoreo**: Tracking de performance de cada agente
+
+Ver `examples/workflow-context-usage.ts` para ejemplos completos.
+
 ## 🛠️ Development
 
 ```bash
