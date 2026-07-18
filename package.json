@@ -1,0 +1,29 @@
+{
+  "name": "@bokata/skills",
+  "version": "1.0.0",
+  "description": "Bokata Product Trio SDD framework for Claude Code, OpenCode, Cursor, and Codex",
+  "keywords": [
+    "bokata",
+    "product-trio",
+    "sdd",
+    "skills",
+    "claude-code",
+    "opencode",
+    "cursor",
+    "codex"
+  ],
+  "bin": {
+    "bokata-skills": "./install.js"
+  },
+  "scripts": {
+    "install": "node ./install.js"
+  },
+  "files": [
+    ".agents/",
+    "agents/",
+    "commands/",
+    "install.js",
+    "README.md"
+  ],
+  "license": "MIT"
+}
