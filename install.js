@@ -89,8 +89,8 @@ if (harnesses.claude || harnesses.cursor) {
 }
 
 if (harnesses.opencode) {
-  copyDir('commands/opencode', '.opencode/commands/bokata');
-  console.log('✅ Commands installed for OpenCode');
+  copyDir('commands/task-parallel', '.opencode/commands/bokata');
+  console.log('✅ Commands installed for OpenCode (task-parallel)');
   installed++;
 }
 

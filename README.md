@@ -9,7 +9,7 @@ Bokata helps teams generate Features Backbones, Acceptance Criteria, and Walking
 | Harness | Skills | Agents | Commands | Trio Parallel |
 |---------|--------|--------|----------|---------------|
 | **Claude Code** | ✅ | ✅ | ✅ | ✅ Task tool |
-| **OpenCode** | ✅ | ✅ | ✅ | ⚠️ Sequential |
+| **OpenCode** | ✅ | ✅ | ✅ | ✅ Task tool |
 | **Cursor** | ✅ | ✅ | ✅ | ✅ Task tool |
 | **Codex** | ✅ | ✅ | ✅ | ✅ spawn_agents |
 
@@ -86,8 +86,7 @@ agents/                       ← Pure prompts (harness-agnostic)
 └── bokata-product-engineer.md
 
 commands/                     ← Orchestration by execution model
-├── task-parallel/            ← Shared by Claude Code + Cursor (Task tool)
-├── opencode/                 ← @subagents sequential
+├── task-parallel/            ← Claude Code + Cursor + OpenCode (Task tool)
 └── codex/                    ← spawn_agents parallel
 ```
 
