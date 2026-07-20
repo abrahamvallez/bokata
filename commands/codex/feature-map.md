@@ -3,7 +3,7 @@ name: "Bokata: Feature Map"
 description: Generate a Features Backbone and Functional Acceptance Criteria using the Product Trio (PM, Designer, Engineer). Outputs as .md and .html under docs/initiatives/[name]/.
 ---
 
-Generate a Features Backbone (User Story Mapping) and Functional-Level Acceptance Criteria using the **Product Trio** — Product Manager (lead), Designer, and Engineer reviewing and contributing from their lenses.
+Generate a Features Backbone (User Story Mapping) and Functional-Level Acceptance Criteria using the **Product Trio** — coordinated by the neutral `bokata-product-coordinator`, with PM, Designer, and Engineer reviewing from their lenses.
 
 All outputs (.md + .html) are saved under `docs/initiatives/<initiative-slug>/`.
 
@@ -38,7 +38,7 @@ Produce one `## Discovery Context — Backbone` block with sections: Actors Conf
 
 ---
 
-## Step 3: Stage 1 — Backbone (Trio Review)
+## Step 3: Stage 1 — Backbone (Coordinator Invokes Skill + Trio Review)
 
 ### 3a. Invoke Feature Mapper Skill
 
@@ -62,7 +62,7 @@ Review this Features Backbone draft from the viability/value lens. You have:
 - Draft backbone: [paste backbone]
 - Discovery Context: [paste context]
 
-Do NOT ask the user questions. If anything is ambiguous, state an assumption. Focus on: scope right-sizing, User Task granularity for value, dependency justification, missing value.
+Do NOT ask the user questions. If anything is ambiguous, state an assumption. Focus on: scope right-sizing, User Task granularity for value, dependency justification, missing value. Tag every finding with Severity (Critical|Suggested) and Type (factual/scope|trade-off).
 ```
 
 **Subagent 2: bokata-product-designer**
@@ -71,7 +71,7 @@ Review this Features Backbone draft from the UX/UI design lens. You have:
 - Draft backbone: [paste backbone]
 - Discovery Context: [paste context]
 
-Do NOT ask the user questions. Focus on: missing user-facing states, journey coherence, UI pattern consistency, custom component needs.
+Do NOT ask the user questions. Focus on: missing user-facing states, journey coherence, UI pattern consistency, custom component needs. Tag every finding with Severity (Critical|Suggested) and Type (factual/scope|trade-off).
 ```
 
 **Subagent 3: bokata-product-engineer**
@@ -80,7 +80,7 @@ Review this Features Backbone draft from the feasibility/technical-sustainabilit
 - Draft backbone: [paste backbone]
 - Discovery Context: [paste context]
 
-Do NOT ask the user questions. Focus on: Feature boundary coupling, data model implications, technical risk, architecture sustainability.
+Do NOT ask the user questions. Focus on: Feature boundary coupling, data model implications, technical risk, architecture sustainability. Tag every finding with Severity (Critical|Suggested) and Type (factual/scope|trade-off).
 ```
 
 Wait for all three to complete.
@@ -96,6 +96,8 @@ You act as the **neutral coordinator** — you do not add a fourth opinion and y
 **Handling bucket (c):** collect all trade-offs first (never a per-conflict drip). For each, prepare the two positions (attributed to their lens), the one-sentence crux, and a **recommended default** grounded in the `constitution` / Fast Feedback Principle.
 - **Interactive `codex` session:** present all trade-offs as a single numbered decision point and wait for the user's choice before writing.
 - **Headless / automated run** (`codex exec`, `spawn_agents`, CI): do not block — apply the recommended default for each and record every trade-off in `## Trio Reconciliation Notes` with its two positions, the applied default, and a `⚠ flagged for human review` marker.
+
+**System Task guard (critical):** If a reviewer finding describes system/backend behavior, do NOT default to adding it as a new standalone System Task. Apply the System Task trigger test from `methodology.md`: is this triggered by a direct user action already covered by an existing User Task? If yes — embed it as a note on that User Task's description instead. Only create a new standalone System Task if the finding describes a genuine autonomous workflow transition.
 
 Produce final `backbone.md` with (a) incorporated, (b) resolved-and-cited, and (c) resolved-by-user-or-default — all (b)/(c) outcomes captured in `## Trio Reconciliation Notes`.
 
@@ -202,6 +204,9 @@ Print to user:
 - backbone.md / .html ✅ — {{NUM_FEATURES}} Features, {{NUM_TASKS}} User Tasks
 - acceptance-criteria-functional.md / .html ✅ — {{NUM_REQUIREMENTS}} Requirements, {{NUM_SCENARIOS}} Scenarios (functional depth)
 - story-map.html ✅ — Patton-style board
+
+**Trio Review Notes:**
+[If any reconciliation notes exist: "See backbone.md for [N] reconciliation notes flagged during PM/Designer/Engineer review."]
 
 **Next step:** Run `/bokata:slice-feature [feature name]` to decompose a Feature into a Walking Skeleton + Increments Backlog.
 ```

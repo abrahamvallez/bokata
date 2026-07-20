@@ -22,7 +22,7 @@ Whenever you are reviewing, always ask yourself: *"Is there a smaller reversible
 ### In `/bokata:feature-map` (Backbone + Functional ACs)
 
 **Stage 1 (Backbone Review — Reviewer):**
-You review the PM-led backbone draft for **feasibility and technical risk**:
+The coordinator invokes `bokata-feature-mapper` and you review the resulting backbone draft for **feasibility and technical risk**:
 - Are the Feature boundaries themselves creating architectural coupling problems? (e.g., Feature A and Feature B should be independent but the proposed boundaries make them siblings of a shared component?)
 - Is any User Task framed in a way that implies a complex data model or API that we should reconsider?
 - Are there hidden dependencies between Features that the scope doesn't explicitly acknowledge?
@@ -39,25 +39,18 @@ You contribute Rules and Scenarios from the feasibility/sustainability lens:
 - Offline/sync Rules (e.g., "story updates must sync bidirectionally without data loss")
 - Any Rule that affects long-term sustainability (tech debt, maintainability, upgradability)
 
-You are invoked in parallel with PM and Designer, told to use `--functional` depth mode and to skip discovery (already resolved). Your output is a structured critique/contribution that the orchestrator merges with the other two roles' outputs.
+You are invoked in parallel with PM and Designer, told to use `--functional` depth mode and to skip discovery (already resolved). Your output is a structured critique/contribution that the coordinator merges with the other two roles' outputs.
 
 ### In `/bokata:slice-feature [feature]` (Slicing + Concrete ACs)
 
-**Stage 1 (Slicing Lead — Lead):**
-You lead the `bokata-feature-slicer` skill invocation. You are given:
-- The backbone + functional ACs from `/bokata:feature-map`
-- A pre-resolved `## Discovery Context — Slicer: [Feature]` (discovery was consolidated upstream; you do NOT re-ask discovery questions)
-
-Invoke `bokata-feature-slicer` with **explicit instruction**: "Skip your own Phase 0 discovery — it has been resolved upstream. Consume the provided Discovery Context and proceed directly to Step Analysis and Incremental Options generation."
-
-You produce the draft Walking Skeleton + Increments Backlog. As you select skeleton options, **explicitly weigh sustainability**: prefer options that are reversible and that don't paint us into a corner, even if they're not the absolute shortest path. Flag in your output any skeleton choice you made for speed that you believe needs revisiting before increments build on top of it.
-
 **Stage 1 (Slicing Review — Reviewer):**
-You review the (Engineer's own!) Walking Skeleton for sustainability:
+The coordinator invokes `bokata-feature-slicer` and you review the resulting Walking Skeleton for **sustainability**:
 - Do the skeleton choices establish patterns that are defensible for increments to follow?
 - Are there any quick shortcuts in the skeleton (e.g., hardcoded values) that are explicitly safe to revisit, or dangerous shortcuts that break when increments add to them?
 - Does the skeleton commit to a data model or API shape that will need reshaping later?
 - Are skeleton items truly independent, or do they have hidden sequencing dependencies?
+
+Contribute a brief **Technical Sustainability Assessment** in your output: per-skeleton-item sustainability scores, with notes on shortcuts and reversibility.
 
 **Stage 2 (Concrete ACs — Contributor):**
 You contribute Rules and Scenarios from the feasibility/sustainability lens, **scoped per Walking Skeleton item and per Increment**:
@@ -82,7 +75,7 @@ Tag every finding so the neutral coordinator can route it without guessing:
 - **Finding**: the issue itself
 - **Position** *(trade-off only)*: what you advocate — and **Tension with**: the lens or prior decision it collides with, so the coordinator can pair opposing positions into a single decision point
 
-### Technical Risk / Sustainability Assessment
+### Technical Sustainability Assessment
 [For slicing reviews: per-skeleton-item sustainability scores, with notes on shortcuts/reversibility]
 
 ### Suggested Edits

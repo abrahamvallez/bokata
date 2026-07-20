@@ -3,7 +3,7 @@ name: "Bokata: Slice Feature"
 description: Decompose a Feature (from an existing backbone) into a Walking Skeleton + Increments Backlog, with concrete-depth Acceptance Criteria per skeleton item/increment.
 ---
 
-Decompose a Feature from an existing Features Backbone into a **Walking Skeleton + Increments Backlog**, with **concrete-depth Acceptance Criteria** using the **Product Trio** — Engineer (lead), PM, and Designer reviewing and contributing.
+Decompose a Feature from an existing Features Backbone into a **Walking Skeleton + Increments Backlog**, with **concrete-depth Acceptance Criteria** using the **Product Trio** — coordinated by the neutral `bokata-product-coordinator`, with PM, Designer, and Engineer reviewing from their lenses.
 
 All outputs (.md + .html) are saved under `docs/initiatives/<initiative-slug>/<feature-slug>/`.
 
@@ -27,7 +27,7 @@ Produce one `## Discovery Context — Slicer: [Feature Name]` block.
 
 ---
 
-## Step 3: Stage 1 — Slicing (Trio Review)
+## Step 3: Stage 1 — Slicing (Coordinator Invokes Skill + Trio Review)
 
 ### 3a. Invoke Feature Slicer Skill
 
@@ -54,7 +54,7 @@ Review this Walking Skeleton + Increments Backlog for [Feature] from the value/v
 - Backbone + functional ACs: [paste for context]
 - Discovery Context: [paste]
 
-Do NOT ask the user questions. Focus on: Is the skeleton truly minimum-viable-VALUE? Does each skeleton item ship observable value? Are Increments ordered by business impact?
+Do NOT ask the user questions. Focus on: Is the skeleton truly minimum-viable-VALUE? Does each skeleton item ship observable value? Are Increments ordered by business impact? Tag every finding with Severity (Critical|Suggested) and Type (factual/scope|trade-off).
 ```
 
 **Subagent 2: bokata-product-designer**
@@ -64,7 +64,7 @@ Review this Walking Skeleton + Increments Backlog for [Feature] from the UX/UI d
 - Backbone + functional ACs: [paste for context]
 - Discovery Context: [paste]
 
-Do NOT ask the user questions. Focus on: Does the skeleton compose into a coherent minimal UI experience? Are missing states isolated to increments or essential to skeleton?
+Do NOT ask the user questions. Focus on: Does the skeleton compose into a coherent minimal UI experience? Are missing states isolated to increments or essential to skeleton? Tag every finding with Severity (Critical|Suggested) and Type (factual/scope|trade-off).
 ```
 
 Wait for both to complete.
@@ -147,6 +147,7 @@ You receive the concrete ACs.
 2. **Render & Write** `docs/initiatives/<initiative-slug>/<feature-slug>/slicing.html`:
    - Using the `html-template.md` conversion rules from the command's resources directory
    - Build title: `"[Feature Name] — Walking Skeleton + Increments Backlog"`
+   - Build subtitle: `"Trio-Reviewed Feature Slicing"`
    - Footer: `"[Feature Name] Slicing | Generated [DATE] | Command: /bokata:slice-feature | Source: Backbone [initiative] + Functional ACs"`
 
 3. **Write** `docs/initiatives/<initiative-slug>/<feature-slug>/acceptance-criteria-concrete.md` (the concrete AC markdown)
@@ -190,6 +191,9 @@ Print to user:
 - slicing.md / .html ✅ — {{NUM_SKELETON_ITEMS}} Walking Skeleton items, {{NUM_INCREMENTS}} Increments
 - acceptance-criteria-concrete.md / .html ✅ — {{NUM_GHERKIN_BLOCKS}} Gherkin scenarios (concrete depth)
 - story-map.html (updated) ✅ — {{FEATURE_NAME}}'s Step columns updated
+
+**Trio Review Notes:**
+[If any reconciliation notes exist: "See slicing.md for [N] reconciliation notes flagged during PM/Designer/Engineer review."]
 
 **Next steps:**
 1. Start implementing: Pick a Walking Skeleton item and use its Gherkin ACs.

@@ -20,17 +20,8 @@ Whenever you are reviewing, always ask yourself: *"Does this favor the smallest 
 
 ### In `/bokata:feature-map` (Backbone + Functional ACs)
 
-**Stage 1 (Backbone Draft — Lead):**
-You lead the `bokata-feature-mapper` skill invocation. You are given:
-- The initiative description / PRD / openspec spec
-- A pre-resolved `## Discovery Context — Backbone` (discovery was consolidated upstream; you do NOT re-ask discovery questions)
-
-Invoke `bokata-feature-mapper` with **explicit instruction**: "Skip your own Phase 0 discovery — it has been resolved upstream. Consume the provided Discovery Context and proceed directly to feature identification and User Task mapping."
-
-You produce the draft backbone (`## Features Backbone`).
-
 **Stage 1 (Backbone Review — Reviewer):**
-You are also a reviewer of the backbone draft (after Designer and Engineer review it). Critique from the **viability/value lens only**:
+The coordinator invokes `bokata-feature-mapper` and you review the resulting backbone draft. Critique from the **viability/value lens only**:
 - Is scope right-sized, or is something bloated / missing?
 - Are User Tasks appropriately granular for value, or should some be combined/split?
 - Are dependencies justified (why does Feature B really need Feature A)?
@@ -42,12 +33,12 @@ You contribute Rules and Scenarios from the viability/value lens:
 - Value-triggering rules ("user can filter by tags" — what business need does this unlock?)
 - Any rule that affects whether a skeleton item ships zero value or meaningful value
 
-You are invoked in parallel with Designer and Engineer, told to use `--functional` depth mode and to skip discovery (already resolved). Your output is a structured critique/contribution that the orchestrator merges with the other two roles' outputs.
+You are invoked in parallel with Designer and Engineer, told to use `--functional` depth mode and to skip discovery (already resolved). Your output is a structured critique/contribution that the coordinator merges with the other two roles' outputs.
 
 ### In `/bokata:slice-feature [feature]` (Slicing + Concrete ACs)
 
 **Stage 1 (Slicing Review — Reviewer):**
-You review the Engineer-led Walking Skeleton for **value-per-skeleton-item**:
+The coordinator invokes `bokata-feature-slicer` and you review the resulting Walking Skeleton for **value-per-skeleton-item**:
 - Does each skeleton item, when shipped, deliver observable value to some user or business goal?
 - If the skeleton reaches its "done" state, is the feature minimally useful, or does it need one of the increments to be useful?
 - Are Increments Backlog items ordered by business impact? (Not "easiest first" but "highest-value-unlock first".)

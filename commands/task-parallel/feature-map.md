@@ -1,12 +1,12 @@
 ---
 name: "Bokata: Feature Map"
-description: Generate a Features Backbone and Functional Acceptance Criteria using the Product Trio (PM, Designer, Engineer). Outputs as .md and .html under docs/initiatives/[name]/. PM leads feature mapping; all three roles contribute to functional-depth ACs after trio review.
+description: Generate a Features Backbone and Functional Acceptance Criteria using the Product Trio (PM, Designer, Engineer). Outputs as .md and .html under docs/initiatives/[name]/.
 allowed-tools: Read, Write, Skill, Task, AskUserQuestion, Bash
 category: Workflow
 tags: [bokata, product-trio, feature-mapping, acceptance-criteria]
 ---
 
-Generate a Features Backbone (User Story Mapping) and Functional-Level Acceptance Criteria using the **Product Trio** — Product Manager (lead), Designer, and Engineer reviewing and contributing from their lenses.
+Generate a Features Backbone (User Story Mapping) and Functional-Level Acceptance Criteria using the **Product Trio** — coordinated by the neutral `bokata-product-coordinator`, with PM, Designer, and Engineer reviewing from their lenses.
 
 All outputs (.md + .html) are saved under `docs/initiatives/<initiative-slug>/` and include trio reconciliation notes where conflicts arose.
 
@@ -43,72 +43,56 @@ If the input is already rich (existing backbone/spec provided), acknowledge that
 
 Produce one `## Discovery Context — Backbone` block with sections: Actors Confirmed / Scope Boundaries / Flow Clarifications / Constraints Confirmed / Assumptions.
 
-**Save this in memory for Step 3** — it will be passed to all downstream skill invocations.
+**Save this in memory for Step 3** — it will be passed to the coordinator.
 
 ---
 
-## Step 3: Stage 1 — Backbone (Trio Review)
+## Step 3: Stage 1 — Backbone (Coordinator Invokes Skill + Trio Review)
 
-### 3a. PM Leads Feature Mapper (Main Thread — Skill)
+### 3a. Invoke Coordinator as Task Subagent
 
-Invoke `bokata-feature-mapper` with:
+Spawn the coordinator to handle skill invocation, trio review, and reconciliation:
+
 ```
-/bokata:feature-mapper
-Input: [initiative description / PRD / existing docs]
-Discovery Context: [from Step 2]
-Instruction: "Skip your own Phase 0 discovery — the Discovery Context has been pre-resolved upstream. Proceed directly to Step 1 (Extract Requirements) through Step 6 (Organize Dependencies). Return the ## Features Backbone markdown section."
-```
+subagent_type: bokata-product-coordinator
+prompt: "You are the Product Trio Coordinator. Your task:
 
-You receive the draft backbone.
+1. **Invoke the skill:** Run `bokata-feature-mapper` with:
+   Input: [initiative description / PRD / existing docs]
+   Discovery Context: [paste from Step 2]
+   Instruction: 'Skip your own Phase 0 discovery — the Discovery Context has been pre-resolved upstream. Proceed directly to Step 1 (Extract Requirements) through Step 6 (Organize Dependencies). Return the ## Features Backbone markdown section.'
 
-### 3b. Designer & Engineer Review in Parallel (Task Subagents, Non-Interactive)
+2. **Launch 3 reviewers in parallel** against the draft backbone:
+   - bokata-product-manager (viability/value lens)
+   - bokata-product-designer (UX/UI craft lens)
+   - bokata-product-engineer (feasibility/sustainability lens)
+   
+   Each reviewer receives: the draft backbone + Discovery Context. Instruction: 'Do NOT ask the user questions. Return your review in the format specified in your agent file.'
 
-**Execution constraint (critical):** Issue both Task calls together in a **single assistant message** (two tool-use blocks in one turn) — never separately across different messages. Set **both to foreground/blocking execution** (not background/async) so the turn does NOT end until both results are in hand. Do not proceed, reconcile, or stop until every subagent has returned its result in this same exchange.
+3. **Reconcile all findings** using the Routing Rules from your agent file:
+   - (a) Non-conflicting → incorporate directly
+   - (b) Factual/scope conflict → resolve against artifacts, cite source
+   - (c) Genuine product trade-off → collect all, prepare positions + crux + recommended default
 
-Spawn two Task subagents in parallel:
+4. **System Task guard:** Apply the System Task trigger test before creating any standalone System Task.
 
-**Task 1: Designer Review**
-```
-subagent_type: bokata-product-designer
-prompt: "Review this Features Backbone draft from the UX/UI design lens. You have:
-- Draft backbone: [paste backbone]
-- Discovery Context: [paste context]
-
-Instruction: Do NOT ask the user questions. If anything is ambiguous, state an assumption in your Assumptions section. Return your review in the format specified in your agent file (Review — Product Designer section). Focus on: missing user-facing states, journey coherence, UI pattern consistency, custom component needs."
-```
-
-**Task 2: Engineer Review**
-```
-subagent_type: bokata-product-engineer
-prompt: "Review this Features Backbone draft from the feasibility/technical-sustainability lens. You have:
-- Draft backbone: [paste backbone]
-- Discovery Context: [paste context]
-
-Instruction: Do NOT ask the user questions. If anything is ambiguous, state an assumption in your Assumptions section. Return your review in the format specified in your agent file (Review — Product Engineer section). Focus on: Feature boundary coupling, data model implications, technical risk, architecture sustainability."
+5. **Return the final reconciled backbone markdown** with all (a)/(b)/(c) outcomes captured in a ## Trio Reconciliation Notes section. If in non-interactive mode, apply recommended defaults for (c) and flag with ⚠ flagged for human review."
 ```
 
-**Wait for both to complete in this same turn.** Do not issue further instructions until you have both results in hand.
+**Wait for the coordinator to complete.** Do not proceed until you have the reconciled backbone.
 
-### 3c. Reconcile Reviews (Main Thread — Neutral Coordinator)
+### 3b. Handle Trade-Off Escalation (Main Thread, Interactive)
 
-You (the harness's main thread) act as the **neutral coordinator**. You do NOT add a fourth opinion, and you do NOT arbitrate product trade-offs yourself — your job is to *classify* each reviewer finding and route it. Sort every finding from the Designer and Engineer reviews into exactly one bucket (use the `Type` tag each reviewer attached; verify it, don't trust it blindly):
+If the coordinator returned bucket-(c) trade-offs that need user input (interactive mode):
 
-- **(a) Non-conflicting improvement** — the lenses don't disagree; the finding just improves the backbone. **Action:** incorporate directly (reword Feature descriptions, add missing User Tasks, refine Actor boundaries).
+Present all trade-offs as a **single** decision point. For each trade-off, show:
+- The positions from each lens
+- The crux (one sentence)
+- The coordinator's recommended default
 
-- **(b) Factual / scope conflict** — the lenses disagree, but the disagreement is *decidable against an existing artifact*: the input spec/PRD, the Discovery Context, or the project `constitution`. One lens missed, misread, or reached outside something already decided. **Action:** resolve it deterministically by checking that artifact, apply the resolution, and record a one-line entry in `## Trio Reconciliation Notes` citing the artifact that settled it. **Do not ask the user** — the answer already exists.
+Use `AskUserQuestion` if your harness provides it (one question per conflict; options = each lens position plus recommended default, marked as recommended). If your harness has no such tool, present as a numbered plain-text prompt and wait for the reply.
 
-- **(c) Genuine product trade-off** — the lenses disagree on a scope/UX/sustainability judgment with **no ground truth in any artifact** (e.g., Engineer: "split Feature A into two"; Designer: "keep as one for UX coherence"). This is a product decision the human owns; do not decide it silently. **Action:** escalate (below).
-
-**Escalation for bucket (c) — one consolidated decision point, never a per-conflict drip:**
-
-1. Collect **all** bucket-(c) conflicts from both reviews first. Do not stop the flow the moment one appears.
-2. For each, prepare: the two positions (attributed to their lens), the **crux** (what is actually at stake, one sentence), and a **recommended default** from you as coordinator with a one-line rationale grounded in the `constitution` / the shared Fast Feedback Principle.
-3. **Interactive mode (default):** present them as a **single** decision point and wait for the user's choice before writing. Use the `AskUserQuestion` tool if your harness provides it (one question per conflict; options = each lens position plus your recommended default, marked as recommended). If your harness has no such tool, present the same as a numbered plain-text prompt in the main thread and wait for the reply. Apply the user's selections.
-4. **Non-interactive mode** (`--no-interactive` flag present, or a headless/automation run): do **not** block. Apply your recommended default for each, and record every bucket-(c) trade-off in `## Trio Reconciliation Notes` with its two positions, the default you applied, and a `⚠ flagged for human review` marker so it stays visible in the artifact.
-
-**System Task guard (critical):** If a Designer or Engineer finding describes system/backend behavior (e.g. "add a reverse-geocoding step," "cache responses with this key shape," "make this write idempotent"), do NOT default to adding it as a new standalone System Task. First apply the System Task trigger test from `methodology.md` (also enforced by `bokata-feature-mapper`'s own audit table): is this triggered by a direct user action already covered by an existing User Task? If yes — the far more common case for engineering-review findings — embed it as a note on that User Task's description instead. Only create a new standalone System Task if the finding describes a genuine autonomous workflow transition. Re-run this check for every System Task added or reworded during reconciliation, not just the ones from the initial draft.
-
-Produce final `backbone.md` with trio review integrated.
+Apply the user's selections to the reconciled backbone.
 
 ---
 
@@ -169,9 +153,9 @@ You receive the functional ACs.
 
 ---
 
-## Step 3c (Immediate After Reconciliation): Write Backbone Markdown & Render HTML
+## Step 5: Write Backbone Markdown & Render HTML
 
-Right after reconciling Designer/Engineer reviews (Step 3c above):
+Right after reconciling (Step 3) and handling any trade-offs:
 
 1. **Write** `docs/initiatives/<initiative-slug>/backbone.md` (the final reconciled markdown)
 
@@ -194,7 +178,7 @@ Right after reconciling Designer/Engineer reviews (Step 3c above):
 
 ---
 
-## Step 4b (Immediate After AC Generation): Write AC Markdown & Render HTML
+## Step 6: Write AC Markdown & Render HTML
 
 Right after consolidating trio contributions and invoking AC skill (Step 4b above):
 
@@ -209,7 +193,7 @@ Right after consolidating trio contributions and invoking AC skill (Step 4b abov
 
 ---
 
-## Step 5: Verification Gate (No New Rendering Here)
+## Step 7: Verification Gate (No New Rendering Here)
 
 This step is now a **checklist verification** only — no new rendering work happens here:
 
@@ -219,11 +203,11 @@ This step is now a **checklist verification** only — no new rendering work hap
 - [ ] `docs/initiatives/<initiative-slug>/acceptance-criteria-functional.md` exists and is final
 - [ ] `docs/initiatives/<initiative-slug>/acceptance-criteria-functional.html` exists
 
-(All HTML rendering now happens immediately after its corresponding .md is finalized, not deferred to Step 5.)
+(All HTML rendering now happens immediately after its corresponding .md is finalized, not deferred to Step 7.)
 
 ---
 
-## Step 6: Summary & Next Steps (Main Thread)
+## Step 8: Summary & Next Steps (Main Thread)
 
 Print to user:
 ```
@@ -259,10 +243,10 @@ Print to user:
 - [ ] **All System Tasks follow the workflow-transition test from methodology.md** (only autonomous state transitions remain standalone; all direct-user-action responses are embedded in User Task descriptions)
 - [ ] **System Tasks use naming format `System Task {N}.{M}: [Verb] [Object]`** (with explicit Trigger field)
 - [ ] **Features/User Tasks/System Tasks use correct heading levels:** `#### Feature`, `##### User Task`, `##### System Task` (not bold text)
-- [ ] Designer/Engineer reviews are visibly mentioned in the narrative (or if they had no issues, explicitly state that)
+- [ ] Trio reviews are visibly mentioned in the narrative (or if they had no issues, explicitly state that)
 - [ ] Trio Reconciliation Notes section is present if any conflicts were resolved
 - [ ] Functional AC Requirements use SHALL/SHOULD language
 - [ ] Functional AC Scenarios use WHEN/THEN (Given implicit/optional)
 - [ ] Every `.html` was rendered and written immediately after its `.md` was finalized (not deferred to a final batch step)
 - [ ] `story-map.html` exists, with Features spanning the row-1 backbone header and each User Task as its own Step column underneath (not Features-as-columns with tasks listed inside)
-- [ ] All parallel subagent fan-outs ran foreground, single-message, with all results present before reconciliation
+- [ ] Coordinator subagent completed before any downstream work began; all parallel subagent fan-outs ran foreground, single-message, with all results present before reconciliation
