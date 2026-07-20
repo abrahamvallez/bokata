@@ -75,36 +75,36 @@ Decompose a Feature into a Walking Skeleton + Increments Backlog:
 ## Architecture
 
 ```
-.agents/skills/               ← Open standard (all harnesses read here)
-├── bokata-feature-mapper/    ← User Story Mapping methodology
-├── bokata-feature-slicer/    ← Walking Skeleton + Increments
-└── bokata-acceptance-criteria/ ← Gherkin AC generation
+.agents/skills/                     ← Open standard (all harnesses read here)
+├── bokata-feature-mapper/          ← User Story Mapping methodology
+├── bokata-feature-slicer/          ← Walking Skeleton + Increments
+└── bokata-acceptance-criteria/     ← Gherkin AC generation
 
-agents/                       ← Pure prompts (harness-agnostic)
-├── bokata-product-coordinator.md  ← Neutral orchestrator (invokes skills, launches reviewers, reconciles)
-├── bokata-product-manager.md      ← Viability & Value lens (reviewer + contributor)
-├── bokata-product-designer.md     ← Usability & UX/UI Craft lens (reviewer + contributor)
-└── bokata-product-engineer.md     ← Feasibility & Technical Sustainability lens (reviewer + contributor)
+agents/                             ← Pure prompts (harness-agnostic)
+├── bokata-product-coordinator.md   ← Reconciliation rules reference (NOT installed as agent)
+├── bokata-product-manager.md       ← Viability & Value lens (reviewer + contributor)
+├── bokata-product-designer.md      ← Usability & UX/UI Craft lens (reviewer + contributor)
+└── bokata-product-engineer.md      ← Feasibility & Technical Sustainability lens (reviewer + contributor)
 
-commands/                     ← Orchestration by execution model
-├── task-parallel/            ← Claude Code + Cursor + OpenCode (Task tool)
-│   ├── feature-map.md        ← Dispatcher → coordinator (Task subagent) → write output
-│   └── slice-feature.md      ← Dispatcher → coordinator (Task subagent) → write output
-└── codex/                    ← spawn_agents parallel
-    ├── feature-map.md        ← Coordinator runs in main thread
-    └── slice-feature.md      ← Coordinator runs in main thread
+commands/                           ← Orchestration by execution model
+├── task-parallel/                  ← Claude Code + Cursor + OpenCode (Task tool)
+│   ├── feature-map.md              ← Main thread: invokes skill → 3 reviewers → reconciles → writes
+│   └── slice-feature.md            ← Main thread: invokes skill → 3 reviewers → reconciles → writes
+└── codex/                          ← spawn_agents parallel
+    ├── feature-map.md              ← Main thread: same pattern as task-parallel
+    └── slice-feature.md            ← Main thread: same pattern as task-parallel
 ```
 
 ## Product Trio Roles
 
 | Role | Lens | Role Type |
 |------|------|-----------|
-| **Product Coordinator** | Neutral orchestration | Invokes skills, launches reviewers, reconciles findings |
-| **Product Manager** | Viability & Value | Reviewer + AC contributor |
-| **Product Designer** | Usability & UX/UI Craft | Reviewer + AC contributor |
-| **Product Engineer** | Feasibility & Technical Sustainability | Reviewer + AC contributor |
+| **Product Coordinator** | Neutral orchestration | **Main thread role** — the command itself acts as coordinator (invokes skills, launches reviewers, reconciles findings, escalates trade-offs) |
+| **Product Manager** | Viability & Value | Reviewer + AC contributor (Task subagent) |
+| **Product Designer** | Usability & UX/UI Craft | Reviewer + AC contributor (Task subagent) |
+| **Product Engineer** | Feasibility & Technical Sustainability | Reviewer + AC contributor (Task subagent) |
 
-No single role "leads" — the coordinator invokes skills and all three lenses review from their perspective.
+No single role "leads" — the main thread coordinates and all three lenses review from their perspective.
 
 ## Methodology
 
@@ -116,7 +116,7 @@ Bokata follows Teresa Torres' Product Trio framework combined with:
 
 ## Conflict Handling
 
-During trio review, the **Product Coordinator** (running as a Task subagent in OpenCode/Claude/Cursor, or as the main thread in Codex) acts as a **neutral orchestrator** — no fourth opinion, no arbitration of product trade-offs. Each reviewer finding is routed into one of three buckets:
+During trio review, the **main thread** (the command itself) acts as a **neutral orchestrator** — no fourth opinion, no arbitration of product trade-offs. Each reviewer finding is routed into one of three buckets:
 
 - **Non-conflicting** — incorporated directly.
 - **Factual / scope conflict** — resolved deterministically against the backbone, ACs, Discovery Context, or constitution, and noted with the artifact that settled it.

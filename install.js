@@ -23,9 +23,10 @@ const agents = [
   'bokata-product-engineer'
 ];
 
-// Coordinator: only for task-parallel harnesses (Claude, Cursor, OpenCode)
-// In Codex, the coordinator runs in the main thread — no separate agent needed.
-const coordinator = 'bokata-product-coordinator';
+// Note: bokata-product-coordinator is NOT installed as a subagent.
+// The coordinator role is executed by the main thread in all harnesses.
+// The coordinator prompt (agents/bokata-product-coordinator.md) exists as
+// a reference resource for reconciliation rules, not as an installable agent.
 
 let installed = 0;
 
@@ -56,17 +57,6 @@ if (harnesses.claude || harnesses.cursor) {
       fs.writeFileSync(`.cursor/agents/${agent}.md`, output);
     }
   });
-  // Coordinator: neutral orchestrator for task-parallel harnesses
-  const coordPrompt = fs.readFileSync(`agents/${coordinator}.md`, 'utf8');
-  const coordOutput = generateTaskParallelAgent(coordinator, coordPrompt);
-  if (harnesses.claude) {
-    ensureDir('.claude/agents');
-    fs.writeFileSync(`.claude/agents/${coordinator}.md`, coordOutput);
-  }
-  if (harnesses.cursor) {
-    ensureDir('.cursor/agents');
-    fs.writeFileSync(`.cursor/agents/${coordinator}.md`, coordOutput);
-  }
   if (harnesses.claude) console.log('✅ Agents installed for Claude Code');
   if (harnesses.cursor) console.log('✅ Agents installed for Cursor');
   installed++;
@@ -79,11 +69,6 @@ if (harnesses.opencode) {
     ensureDir('.opencode/agents');
     fs.writeFileSync(`.opencode/agents/${agent}.md`, output);
   });
-  // Coordinator: neutral orchestrator for OpenCode
-  const coordPrompt = fs.readFileSync(`agents/${coordinator}.md`, 'utf8');
-  const coordOutput = generateOpenCodeAgent(coordinator, coordPrompt);
-  ensureDir('.opencode/agents');
-  fs.writeFileSync(`.opencode/agents/${coordinator}.md`, coordOutput);
   console.log('✅ Agents installed for OpenCode');
   installed++;
 }
@@ -198,7 +183,6 @@ sandbox_mode = "read-only"
 
 function getRoleDescription(name) {
   const descriptions = {
-    'bokata-product-coordinator': 'neutral orchestrator — invokes skills, launches trio reviewers, reconciles findings into buckets (non-conflicting, factual, trade-off), escalates trade-offs to the human',
     'bokata-product-manager': 'viability/value lens (Teresa Torres). Reviews and contributes to bokata backbone, acceptance criteria, and slicing artifacts for business value, prioritization, ROI, and scope justification',
     'bokata-product-designer': 'usability lens broadened to UX/UI craft (visual design, interaction design, component/UI feasibility, not just journey coherence). Reviews and contributes to bokata backbone, acceptance criteria, and slicing artifacts',
     'bokata-product-engineer': 'feasibility lens broadened to technical sustainability (architecture soundness, maintainability, tech debt, long-term implications of Walking Skeleton/increment choices), not just one-shot buildability. Reviews and contributes to bokata backbone, acceptance criteria, and slicing artifacts'

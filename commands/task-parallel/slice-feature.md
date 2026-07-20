@@ -6,7 +6,7 @@ category: Workflow
 tags: [bokata, product-trio, feature-slicing, incremental-design]
 ---
 
-Decompose a Feature from an existing Features Backbone into a **Walking Skeleton + Increments Backlog**, with **concrete-depth Acceptance Criteria** (per skeleton item and per increment) using the **Product Trio** — coordinated by the neutral `bokata-product-coordinator`, with PM, Designer, and Engineer reviewing from their lenses.
+Decompose a Feature from an existing Features Backbone into a **Walking Skeleton + Increments Backlog**, with **concrete-depth Acceptance Criteria** (per skeleton item and per increment) using the **Product Trio** — you act as the neutral coordinator, with PM, Designer, and Engineer reviewing from their lenses.
 
 All outputs (.md + .html) are saved under `docs/initiatives/<initiative-slug>/<feature-slug>/` and include trio reconciliation notes where conflicts arose.
 
@@ -31,7 +31,7 @@ Accept either:
 
 ---
 
-## Step 2: Consolidated Phase 0 Discovery (Main Thread, Interactive)
+## Step 2: Consolidated Phase 0 Discovery (Interactive)
 
 Instead of each skill asking its own Phase 0 questions, consolidate once here.
 
@@ -47,56 +47,80 @@ If the input is already rich (existing backbone + functional ACs provided), ackn
 
 Produce one `## Discovery Context — Slicer: [Feature Name]` block with sections: Technical Clarifications / Layer Decisions / Increment Boundaries / Dependencies Confirmed / Constraints Noted / Assumptions.
 
-**Save this in memory for Step 3** — it will be passed to the coordinator.
+**Save this in memory for Step 3** — it will be passed to reviewers.
 
 ---
 
-## Step 3: Stage 1 — Slicing (Coordinator Invokes Skill + Trio Review)
+## Step 3: Stage 1 — Slicing (Skill + Trio Review, You Coordinate)
 
-### 3a. Invoke Coordinator as Task Subagent
+### 3a. Invoke Feature Slicer Skill
 
-Spawn the coordinator to handle skill invocation, trio review, and reconciliation:
-
+Invoke the `bokata-feature-slicer` skill:
 ```
-subagent_type: bokata-product-coordinator
-prompt: "You are the Product Trio Coordinator. Your task:
-
-1. **Invoke the skill:** Run `bokata-feature-slicer` with:
-   Input: [Feature name from backbone.md]
-   Backbone: [full backbone.md markdown]
-   Functional ACs: [acceptance-criteria-functional.md markdown for this Feature]
-   Discovery Context: [paste from Step 2]
-   Instruction: 'Skip your own Phase 0 discovery — the Discovery Context has been pre-resolved upstream. Proceed directly to Phase 1 (Steps) through Phase 3 (Walking Skeleton + Backlog). Return the ## Walking Skeleton and ## Increments Backlog sections.'
-
-2. **Launch 3 reviewers in parallel** against the draft slicing:
-   - bokata-product-manager (viability/value lens)
-   - bokata-product-designer (UX/UI craft lens)
-   - bokata-product-engineer (feasibility/sustainability lens)
-   
-   Each reviewer receives: the draft slicing + backbone + functional ACs + Discovery Context. Instruction: 'Do NOT ask the user questions. Return your review in the format specified in your agent file.'
-
-3. **Reconcile all findings** using the Routing Rules from your agent file:
-   - (a) Non-conflicting → incorporate directly
-   - (b) Factual/scope conflict → resolve against artifacts (backbone, ACs, Discovery Context, constitution), cite source
-   - (c) Genuine product trade-off → collect all, prepare positions + crux + recommended default
-
-4. **Return the final reconciled slicing markdown** with all (a)/(b)/(c) outcomes captured in a ## Trio Reconciliation Notes section. If in non-interactive mode, apply recommended defaults for (c) and flag with ⚠ flagged for human review."
+/bokata:feature-slicer
+Input: [Feature name from backbone.md]
+Backbone: [full backbone.md markdown]
+Functional ACs: [acceptance-criteria-functional.md markdown for this Feature]
+Discovery Context: [from Step 2]
+Instruction: "Skip your own Phase 0 discovery — the Discovery Context has been pre-resolved upstream. Proceed directly to Phase 1 (Steps) through Phase 3 (Walking Skeleton + Backlog). Return the ## Walking Skeleton and ## Increments Backlog sections."
 ```
 
-**Wait for the coordinator to complete.** Do not proceed until you have the reconciled slicing.
+You receive the draft slicing.
 
-### 3b. Handle Trade-Off Escalation (Main Thread, Interactive)
+### 3b. Trio Review via Parallel Subagents
 
-If the coordinator returned bucket-(c) trade-offs that need user input (interactive mode):
+**Execution constraint (critical):** Issue all three Task calls together in a **single assistant message** (three tool-use blocks in one turn) — never separately. Set **all three to foreground/blocking execution** (not background/async) so the turn does NOT end until all three results are in hand. Do not proceed, consolidate, or stop until every subagent has returned its result in this same exchange.
 
-Present all trade-offs as a **single** decision point. For each trade-off, show:
-- The positions from each lens
-- The crux (one sentence)
-- The coordinator's recommended default
+Spawn three Task subagents in parallel to review the slicing:
 
-Use `AskUserQuestion` if your harness provides it (one question per conflict; options = each lens position plus recommended default, marked as recommended). If your harness has no such tool, present as a numbered plain-text prompt and wait for the reply.
+**Task 1: bokata-product-manager**
+```
+subagent_type: bokata-product-manager
+prompt: "Review this Walking Skeleton + Increments Backlog for [Feature] from the value/viability lens. You have:
+- Draft slicing: [paste Walking Skeleton + Increments]
+- Backbone + functional ACs: [paste for context]
+- Discovery Context: [paste]
 
-Apply the user's selections to the reconciled slicing.
+Do NOT ask the user questions. Focus on: Is the skeleton truly minimum-viable-VALUE? Does each skeleton item ship observable value? Are Increments ordered by business impact? Tag every finding with Severity (Critical|Suggested) and Type (factual/scope|trade-off). Return your review in the format specified in your agent file."
+```
+
+**Task 2: bokata-product-designer**
+```
+subagent_type: bokata-product-designer
+prompt: "Review this Walking Skeleton + Increments Backlog for [Feature] from the UX/UI design lens. You have:
+- Draft slicing: [paste Walking Skeleton + Increments]
+- Backbone + functional ACs: [paste for context]
+- Discovery Context: [paste]
+
+Do NOT ask the user questions. Focus on: Does the skeleton compose into a coherent minimal UI experience? Are missing states isolated to increments or essential to skeleton? Tag every finding with Severity (Critical|Suggested) and Type (factual/scope|trade-off). Return your review in the format specified in your agent file."
+```
+
+**Task 3: bokata-product-engineer**
+```
+subagent_type: bokata-product-engineer
+prompt: "Review this Walking Skeleton + Increments Backlog for [Feature] from the feasibility/technical-sustainability lens. You have:
+- Draft slicing: [paste Walking Skeleton + Increments]
+- Backbone + functional ACs: [paste for context]
+- Discovery Context: [paste]
+
+Do NOT ask the user questions. Focus on: Are layer assignments sound? Are increment boundaries technically viable? Any sustainability concerns with the skeleton choices? Tag every finding with Severity (Critical|Suggested) and Type (factual/scope|trade-off). Return your review in the format specified in your agent file."
+```
+
+**Wait for all three to complete in this same turn.** Do not issue further instructions until you have all three results in hand.
+
+### 3c. Reconcile Reviews (You Are the Neutral Coordinator)
+
+You act as the **neutral coordinator** — you do not add a fourth opinion and you do not arbitrate product trade-offs yourself. Classify each finding from the PM, Designer, and Engineer reviews into one bucket (use each reviewer's `Type` tag, but verify it):
+
+- **(a) Non-conflicting improvement** — incorporate directly into the slicing markdown.
+- **(b) Factual / scope conflict** — decidable against an existing artifact (`backbone.md`, `acceptance-criteria-functional.md`, the Discovery Context, or the project `constitution`). Resolve it deterministically by checking that artifact, apply the fix, and record a one-line entry in `## Trio Reconciliation Notes` citing the artifact. Do not ask the user.
+- **(c) Genuine product trade-off** — a value↔UX / value↔sustainability judgment with no ground truth in any artifact (e.g., PM: "defer Increment 3A"; Designer: "3A must ship in skeleton for coherent UX"). This is the human's decision.
+
+**Handling bucket (c):** collect all trade-offs first (never a per-conflict drip). For each, prepare the two positions (attributed to their lens), the one-sentence crux, and a **recommended default** grounded in the `constitution` / Fast Feedback Principle.
+- **Interactive mode (default):** present all trade-offs as a single numbered decision point and wait for the user's choice before writing. Use `AskUserQuestion` if your harness provides it (one question per conflict; options = each lens position plus your recommended default, marked as recommended). If your harness has no such tool, present the same as a numbered plain-text prompt and wait for the reply. Apply the user's selections.
+- **Non-interactive mode** (`--no-interactive` flag present, or a headless/automation run): do not block — apply the recommended default for each and record every trade-off in `## Trio Reconciliation Notes` with its two positions, the applied default, and a `⚠ flagged for human review` marker.
+
+Produce final `slicing.md` with (a) incorporated, (b) resolved-and-cited, and (c) resolved-by-user-or-default — all (b)/(c) outcomes captured in `## Trio Reconciliation Notes`.
 
 ---
 
@@ -143,7 +167,7 @@ Instruction: Do NOT ask the user questions. For each skeleton item: data model s
 
 **Wait for all three to complete in this same turn.** Do not issue further instructions until you have all three results in hand.
 
-### 4b. Consolidate & Invoke AC Skill (Main Thread, Interactive)
+### 4b. Consolidate & Invoke AC Skill (Interactive)
 
 Read all three contributions. Merge them into a single enrichment block (equivalent to a pre-filled `## Discovery Context — Criteria`), de-duplicating overlapping Rules and grouping by skeleton item / increment.
 
@@ -274,4 +298,4 @@ Print to user:
 - [ ] All Gherkin has concrete example data (not abstract placeholders)
 - [ ] Every `.html` was rendered and written immediately after its `.md` was finalized (not deferred to a final batch step)
 - [ ] `story-map.html` update touched only the tagged Step columns for this Feature (`data-task-id` matches from `slicing.md`'s `**[User Task Name]**` tags) — every other Step column, including untagged Steps within this same Feature and all columns from previously-sliced Features, was left untouched
-- [ ] Coordinator subagent completed before any downstream work began; all parallel subagent fan-outs ran foreground, single-message, with all results present before reconciliation
+- [ ] All parallel subagent fan-outs ran foreground, single-message, with all results present before reconciliation

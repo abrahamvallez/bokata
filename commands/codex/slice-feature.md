@@ -45,7 +45,7 @@ You receive the draft slicing.
 
 ### 3b. Trio Review via Parallel Subagents
 
-Spawn two subagents in parallel to review the slicing:
+Spawn three subagents in parallel to review the slicing:
 
 **Subagent 1: bokata-product-manager**
 ```
@@ -67,11 +67,21 @@ Review this Walking Skeleton + Increments Backlog for [Feature] from the UX/UI d
 Do NOT ask the user questions. Focus on: Does the skeleton compose into a coherent minimal UI experience? Are missing states isolated to increments or essential to skeleton? Tag every finding with Severity (Critical|Suggested) and Type (factual/scope|trade-off).
 ```
 
-Wait for both to complete.
+**Subagent 3: bokata-product-engineer**
+```
+Review this Walking Skeleton + Increments Backlog for [Feature] from the feasibility/technical-sustainability lens. You have:
+- Draft slicing: [paste Walking Skeleton + Increments]
+- Backbone + functional ACs: [paste for context]
+- Discovery Context: [paste]
+
+Do NOT ask the user questions. Focus on: Are layer assignments sound? Are increment boundaries technically viable? Any sustainability concerns with the skeleton choices? Tag every finding with Severity (Critical|Suggested) and Type (factual/scope|trade-off).
+```
+
+Wait for all three to complete.
 
 ### 3c. Reconcile Reviews (Neutral Coordinator)
 
-You act as the **neutral coordinator** — you do not add a fourth opinion and you do not arbitrate product trade-offs yourself. Classify each finding from the PM and Designer reviews into one bucket (use each reviewer's `Type` tag, but verify it):
+You act as the **neutral coordinator** — you do not add a fourth opinion and you do not arbitrate product trade-offs yourself. Classify each finding from the PM, Designer, and Engineer reviews into one bucket (use each reviewer's `Type` tag, but verify it):
 
 - **(a) Non-conflicting improvement** — incorporate directly into the slicing markdown.
 - **(b) Factual / scope conflict** — decidable against an existing artifact (`backbone.md`, `acceptance-criteria-functional.md`, the Discovery Context, or the project `constitution`). Resolve it deterministically by checking that artifact, apply the fix, and record a one-line entry in `## Trio Reconciliation Notes` citing the artifact. Do not ask the user.
