@@ -15,6 +15,9 @@
   "bin": {
     "bokata": "./bin/bokata.js"
   },
+  "scripts": {
+    "test": "node -e \"require('./src/install.js'); console.log('src/install.js loads OK')\""
+  },
   "files": [
     ".agents/",
     "agents/",
