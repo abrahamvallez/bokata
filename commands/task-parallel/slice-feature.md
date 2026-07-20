@@ -97,13 +97,24 @@ Instruction: Do NOT ask the user questions. If anything is ambiguous, state an a
 
 **Wait for both to complete in this same turn.** Do not issue further instructions until you have both results in hand.
 
-### 3c. Reconcile Reviews (Main Thread)
+### 3c. Reconcile Reviews (Main Thread — Neutral Coordinator)
 
-Read both PM and Designer outputs. For each finding:
-- **Non-conflicting**: incorporate into the slicing markdown (move items between skeleton/increments, reorder increments, flag safety notes)
-- **Conflicting** (e.g., PM says "defer Increment 3A"; Designer says "3A must ship in skeleton for coherent UX"): write a `## Trio Reconciliation Notes` block in the final doc, surface the conflict + recommended resolution, flag for user review if genuinely unresolved
+You (the harness's main thread) act as the **neutral coordinator**. You do NOT add a fourth opinion, and you do NOT arbitrate product trade-offs yourself — your job is to *classify* each reviewer finding and route it. Sort every finding from the PM and Designer reviews into exactly one bucket (use the `Type` tag each reviewer attached; verify it, don't trust it blindly):
 
-Produce final `slicing.md` with trio review integrated.
+- **(a) Non-conflicting improvement** — the lenses don't disagree; the finding just improves the slicing. **Action:** incorporate directly (move items between skeleton/increments, reorder increments, add safety notes).
+
+- **(b) Factual / scope conflict** — the lenses disagree, but the disagreement is *decidable against an existing artifact*: `backbone.md`, `acceptance-criteria-functional.md`, the Discovery Context, or the project `constitution`. One lens missed, misread, or reached outside something already decided. **Action:** resolve it deterministically by checking that artifact, apply the resolution, and record a one-line entry in `## Trio Reconciliation Notes` citing the artifact that settled it. **Do not ask the user** — the answer already exists.
+
+- **(c) Genuine product trade-off** — the lenses disagree on a value↔UX / value↔sustainability judgment with **no ground truth in any artifact** (e.g., PM: "defer Increment 3A"; Designer: "3A must ship in skeleton for coherent UX"). This is a product decision the human owns; do not decide it silently. **Action:** escalate (below).
+
+**Escalation for bucket (c) — one consolidated decision point, never a per-conflict drip:**
+
+1. Collect **all** bucket-(c) conflicts from both reviews first. Do not stop the flow the moment one appears.
+2. For each, prepare: the two positions (attributed to their lens), the **crux** (what is actually at stake, one sentence), and a **recommended default** from you as coordinator with a one-line rationale grounded in the `constitution` / the shared Fast Feedback Principle (smallest viable slice that generates learning fastest).
+3. **Interactive mode (default):** present them as a **single** decision point and wait for the user's choice before writing. Use the `AskUserQuestion` tool if your harness provides it (one question per conflict; options = each lens position plus your recommended default, marked as recommended). If your harness has no such tool, present the same as a numbered plain-text prompt in the main thread and wait for the reply. Apply the user's selections.
+4. **Non-interactive mode** (`--no-interactive` flag present, or a headless/automation run): do **not** block. Apply your recommended default for each, and record every bucket-(c) trade-off in `## Trio Reconciliation Notes` with its two positions, the default you applied, and a `⚠ flagged for human review` marker so it stays visible in the artifact.
+
+Produce final `slicing.md` with (a) incorporated, (b) resolved-and-cited, and (c) resolved-by-user-or-default — every bucket-(b) and bucket-(c) outcome captured in `## Trio Reconciliation Notes`.
 
 ---
 

@@ -85,13 +85,19 @@ Do NOT ask the user questions. Focus on: Feature boundary coupling, data model i
 
 Wait for all three to complete.
 
-### 3c. Reconcile Reviews
+### 3c. Reconcile Reviews (Neutral Coordinator)
 
-Read all three outputs. For each finding:
-- **Non-conflicting**: incorporate into the backbone markdown
-- **Conflicting**: write a `## Trio Reconciliation Notes` block
+You act as the **neutral coordinator** — you do not add a fourth opinion and you do not arbitrate product trade-offs yourself. Classify each finding from the PM, Designer, and Engineer reviews into one bucket (use each reviewer's `Type` tag, but verify it):
 
-Produce final `backbone.md` with trio review integrated.
+- **(a) Non-conflicting improvement** — incorporate directly into the backbone markdown.
+- **(b) Factual / scope conflict** — decidable against an existing artifact (the input spec/PRD, the Discovery Context, or the project `constitution`). Resolve it deterministically by checking that artifact, apply the fix, and record a one-line entry in `## Trio Reconciliation Notes` citing the artifact. Do not ask the user.
+- **(c) Genuine product trade-off** — a scope/UX/sustainability judgment with no ground truth in any artifact (e.g., Engineer: "split Feature A into two"; Designer: "keep as one for UX coherence"). This is the human's decision.
+
+**Handling bucket (c):** collect all trade-offs first (never a per-conflict drip). For each, prepare the two positions (attributed to their lens), the one-sentence crux, and a **recommended default** grounded in the `constitution` / Fast Feedback Principle.
+- **Interactive `codex` session:** present all trade-offs as a single numbered decision point and wait for the user's choice before writing.
+- **Headless / automated run** (`codex exec`, `spawn_agents`, CI): do not block — apply the recommended default for each and record every trade-off in `## Trio Reconciliation Notes` with its two positions, the applied default, and a `⚠ flagged for human review` marker.
+
+Produce final `backbone.md` with (a) incorporated, (b) resolved-and-cited, and (c) resolved-by-user-or-default — all (b)/(c) outcomes captured in `## Trio Reconciliation Notes`.
 
 ---
 

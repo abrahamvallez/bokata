@@ -106,6 +106,16 @@ Bokata follows Teresa Torres' Product Trio framework combined with:
 - **Walking Skeleton** pattern for incremental delivery
 - **Spec-Driven Development** for testable specifications
 
+## Conflict Handling
+
+During trio review, the harness's main thread acts as a **neutral coordinator** (no fourth opinion). Each reviewer finding is routed into one of three buckets:
+
+- **Non-conflicting** — incorporated directly.
+- **Factual / scope conflict** — resolved deterministically against the backbone, ACs, Discovery Context, or constitution, and noted.
+- **Genuine product trade-off** (value↔UX / value↔sustainability, no ground truth) — escalated to the human as a **single consolidated decision point** with a recommended default.
+
+Interactive runs ask before continuing; headless runs (`--no-interactive`, `codex exec`, CI) apply the recommended default and flag the trade-off in `Trio Reconciliation Notes`. Every resolution is recorded in the output artifact.
+
 ## License
 
 MIT

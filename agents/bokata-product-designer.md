@@ -67,8 +67,12 @@ When reviewing: return a structured markdown block:
 ```
 ## Review — Product Designer
 
-### Findings (Critical / Suggested)
-[List each finding, prefixed with severity]
+### Findings
+Tag every finding so the neutral coordinator can route it without guessing:
+- **Severity**: Critical | Suggested
+- **Type**: `factual/scope` (decidable against the backbone, the ACs, the Discovery Context, or the project constitution) OR `trade-off` (a value / UX / sustainability judgment with no ground truth in any artifact)
+- **Finding**: the issue itself
+- **Position** *(trade-off only)*: what you advocate — and **Tension with**: the lens or prior decision it collides with, so the coordinator can pair opposing positions into a single decision point
 
 ### UX/UI Coherence Assessment
 [For slicing reviews: per-skeleton-item coherence scores, 1-10, with rationale]

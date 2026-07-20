@@ -69,8 +69,12 @@ When reviewing: return a structured markdown block:
 ```
 ## Review — Product Manager
 
-### Findings (Critical / Suggested)
-[List each finding as bullet points, prefixed with severity level]
+### Findings
+Tag every finding so the neutral coordinator can route it without guessing:
+- **Severity**: Critical | Suggested
+- **Type**: `factual/scope` (decidable against the backbone, the ACs, the Discovery Context, or the project constitution) OR `trade-off` (a value / UX / sustainability judgment with no ground truth in any artifact)
+- **Finding**: the issue itself
+- **Position** *(trade-off only)*: what you advocate — and **Tension with**: the lens or prior decision it collides with, so the coordinator can pair opposing positions into a single decision point
 
 ### Value Assessment
 [For slicing reviews: per-skeleton-item and per-increment value scores, 1-10]
