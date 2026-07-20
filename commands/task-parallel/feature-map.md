@@ -270,4 +270,4 @@ Print to user:
 - [ ] Functional AC Scenarios use WHEN/THEN (Given implicit/optional)
 - [ ] Every `.html` was rendered and written immediately after its `.md` was finalized (not deferred to a final batch step)
 - [ ] `story-map.html` exists, with Features spanning the row-1 backbone header and each User Task as its own Step column underneath (not Features-as-columns with tasks listed inside)
-- [ ] All parallel subagent fan-outs ran foreground, single-message, with all results present before reconciliation
+- [ ] All parallel subagent reviews were issued together and completed before reconciliation began

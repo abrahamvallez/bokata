@@ -15,30 +15,22 @@ Bokata helps teams generate Features Backbones, Acceptance Criteria, and Walking
 
 ## Installation
 
-### Option 1: Clone this repo into your project
-
 ```bash
-# Clone into your project root
-git clone https://github.com/abrahamvallez/bokata.git .bokata-temp
-mv .bokata-temp/.agents .
-mv .bokata-temp/agents .
-mv .bokata-temp/commands .
-mv .bokata-temp/install.js .
-mv .bokata-temp/package.json .
-mv .bokata-temp/README.md .
-rm -rf .bokata-temp
-
-# Run install (detects harnesses automatically)
-node install.js
+npx bokata@latest install
 ```
 
-### Option 2: Use as npm package (future)
+Run this from your project root. `bokata install` auto-detects which harnesses you already use — `.claude/`, `.cursor/`, `.opencode/`, `.codex/` — and installs skills, agents, and commands for each. If none are found, it asks interactively which ones to set up.
+
+Non-interactive / CI usage, or to target specific harnesses:
 
 ```bash
-npx @bokata/skills install
+npx bokata@latest install --claude --cursor
+npx bokata@latest install --yes   # only install what was auto-detected, never prompt
 ```
 
-The install script automatically detects which harnesses you have (`.claude/`, `.opencode/`, `.cursor/`, `.codex/`) and installs the appropriate skills, agents, and commands.
+Re-running `install` is safe — it overwrites previously installed files, so it doubles as the update path.
+
+**Note on Codex:** Codex CLI only discovers custom slash-commands from the global `~/.codex/prompts/` directory (not per-project), so `/bokata-feature-map` and `/bokata-slice-feature` are installed there — shared across all your Codex projects, not just this repo. Skills and agents for Codex stay project-scoped as usual (`.codex/skills/`, `.codex/agents/`).
 
 ## Usage
 
@@ -75,10 +67,12 @@ Decompose a Feature into a Walking Skeleton + Increments Backlog:
 ## Architecture
 
 ```
-.agents/skills/                     ← Open standard (all harnesses read here)
+.agents/skills/                     ← Single source, copied as-is into every harness at install time
 ├── bokata-feature-mapper/          ← User Story Mapping methodology
 ├── bokata-feature-slicer/          ← Walking Skeleton + Increments
 └── bokata-acceptance-criteria/     ← Gherkin AC generation
+
+bin/bokata.js + src/install.js      ← CLI entry point (npx bokata install)
 
 agents/                             ← Pure prompts (harness-agnostic)
 ├── bokata-product-coordinator.md   ← Reconciliation rules reference (NOT installed as agent)

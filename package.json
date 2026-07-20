@@ -1,6 +1,6 @@
 {
-  "name": "@bokata/skills",
-  "version": "1.0.0",
+  "name": "bokata",
+  "version": "2.0.0",
   "description": "Bokata Product Trio SDD framework for Claude Code, OpenCode, Cursor, and Codex",
   "keywords": [
     "bokata",
@@ -13,16 +13,14 @@
     "codex"
   ],
   "bin": {
-    "bokata-skills": "./install.js"
-  },
-  "scripts": {
-    "install": "node ./install.js"
+    "bokata": "./bin/bokata.js"
   },
   "files": [
     ".agents/",
     "agents/",
     "commands/",
-    "install.js",
+    "bin/",
+    "src/",
     "README.md"
   ],
   "license": "MIT"

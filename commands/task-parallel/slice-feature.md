@@ -298,4 +298,4 @@ Print to user:
 - [ ] All Gherkin has concrete example data (not abstract placeholders)
 - [ ] Every `.html` was rendered and written immediately after its `.md` was finalized (not deferred to a final batch step)
 - [ ] `story-map.html` update touched only the tagged Step columns for this Feature (`data-task-id` matches from `slicing.md`'s `**[User Task Name]**` tags) — every other Step column, including untagged Steps within this same Feature and all columns from previously-sliced Features, was left untouched
-- [ ] All parallel subagent fan-outs ran foreground, single-message, with all results present before reconciliation
+- [ ] All parallel subagent fan-outs were issued together and completed before reconciliation began
