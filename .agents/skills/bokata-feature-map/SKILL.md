@@ -1,31 +1,45 @@
 ---
-name: "Bokata: Feature Map"
-description: Generate a Features Backbone and Functional Acceptance Criteria using the Product Trio (PM, Designer, Engineer). Outputs as .md and .html under docs/initiatives/[name]/.
-allowed-tools: Read, Write, Skill, Task, AskUserQuestion, Bash
-category: Workflow
-tags: [bokata, product-trio, feature-mapping, acceptance-criteria]
+name: bokata-feature-map
+description: Generate a Features Backbone and Functional Acceptance Criteria using the Product Trio (PM, Designer, Engineer), written as one features.md (plus .html and a Patton story map) under the initiative folder. Accepts any input — a bokata pitch, a PRD, notes — and only asks about the gaps it leaves. Use it when the user wants a feature map, a backbone, a story map, or to break a large initiative into features.
 ---
 
 Generate a Features Backbone (User Story Mapping) and Functional-Level Acceptance Criteria using the **Product Trio** — you act as the neutral coordinator, with PM, Designer, and Engineer reviewing from their lenses.
 
-All outputs (.md + .html) are saved under `docs/initiatives/<initiative-slug>/` and include trio reconciliation notes where conflicts arose.
+All outputs are saved under `<docs>/<initiative-slug>/` and include trio reconciliation notes where conflicts arose.
+
+---
+
+## Configuration
+
+Read `.bokata.json` at the project root if it exists. Defaults:
+
+```json
+{ "docs": "docs/initiatives",
+  "memory": { "constitution": "CONSTITUTION.md", "glossary": "CONTEXT.md" },
+  "templates": { "features": null },
+  "html": true,
+  "story_map": true }
+```
+
+`<docs>` below is the `docs` value. `templates.features: null` means [resources/features-template.md](resources/features-template.md). `html: false` skips the `.html` renders; `story_map: false` skips `story-map.html`. The `constitution` is the file at `memory.constitution`; use the glossary's terms in every name.
 
 ---
 
 ## Input
 
 Accept either:
-1. **Free-form initiative description** (what you want to build)
-2. **Path to existing docs** (PRD, openspec proposal, features-backbone.md, etc.)
-3. **Combination** (reference existing + add new context)
+1. **A bokata pitch** (`<docs>/<initiative-slug>/pitch.md`, from `bokata-shape`)
+2. **Free-form initiative description** (what you want to build)
+3. **Path to existing docs** (PRD, proposal, features-backbone.md, etc.)
+4. **Combination** (reference existing + add new context)
 
 ---
 
 ## Step 1: Resolve Initiative Slug & Create Folder
 
-1. Ask the user for the initiative name / title if not provided via argument
+1. Ask the user for the initiative name / title if not provided via argument (a pitch already has one)
 2. Derive `<initiative-slug>` (kebab-case, max 50 chars, no spaces)
-3. Create folder: `docs/initiatives/<initiative-slug>/` (use `mkdir -p` via Bash)
+3. Create folder: `<docs>/<initiative-slug>/` (use `mkdir -p` via Bash)
 4. Proceed with confirmed slug in subsequent steps
 
 ---
@@ -38,8 +52,10 @@ Ask clarifying questions that would affect **Feature scope, actors, flows, or bu
 - `bokata-feature-mapper`'s categories: Scope, Actors, Flows, Constraints
 - Later AC phases: Business rules that affect Feature framing (e.g., "must curator-verify stories before public visibility" — is that a Feature boundary or an internal rule?)
 
-If the input is already rich (existing backbone/spec provided), acknowledge that explicitly:
-> "You provided [specs/geolocation-discovery/spec.md], which resolves Scope and Constraints. Skipping those categories; asking only about [missing categories]."
+If the input is already rich (pitch, existing backbone/spec provided), acknowledge that explicitly and ask **only about the gaps**:
+> "You provided [pitch.md], which resolves Scope and Constraints. Skipping those categories; asking only about [missing categories]."
+
+**A pitch's decisions are not re-opened here** — its chosen approach, no-gos and cuts are settled. If the user wants to change one of them, point them back to `bokata-shape`.
 
 Produce one `## Discovery Context — Backbone` block with sections: Actors Confirmed / Scope Boundaries / Flow Clarifications / Constraints Confirmed / Assumptions.
 
@@ -53,8 +69,8 @@ Produce one `## Discovery Context — Backbone` block with sections: Actors Conf
 
 Invoke the `bokata-feature-mapper` skill:
 ```
-/bokata:feature-mapper
-Input: [initiative description / PRD / existing docs]
+bokata-feature-mapper
+Input: [pitch / initiative description / PRD / existing docs]
 Discovery Context: [from Step 2]
 Instruction: "Skip your own Phase 0 discovery — the Discovery Context has been pre-resolved upstream. Proceed directly to Step 1 (Extract Requirements) through Step 6 (Organize Dependencies). Return the ## Features Backbone markdown section."
 ```
@@ -63,9 +79,9 @@ You receive the draft backbone.
 
 ### 3b. Trio Review via Parallel Subagents
 
-**Execution constraint (critical):** Issue all three Task calls together in a **single assistant message** (three tool-use blocks in one turn) — never separately. Set **all three to foreground/blocking execution** (not background/async) so the turn does NOT end until all three results are in hand. Do not proceed, consolidate, or stop until every subagent has returned its result in this same exchange.
+**Execution constraint (critical):** Issue all three subagent calls together in a **single assistant message** (three tool-use blocks in one turn) — never separately. Use your harness's subagent tool (Task/Agent in Claude Code, `task` in OpenCode, `spawn_agents` in Codex, subagents in Cursor). Set **all three to foreground/blocking execution** (not background/async) so the turn does NOT end until all three results are in hand. Do not proceed, consolidate, or stop until every subagent has returned its result in this same exchange. If your harness has no subagents, run the three lenses yourself one after another, each as a separate pass, and say so.
 
-Spawn three Task subagents in parallel to review the backbone:
+Spawn three subagents in parallel to review the backbone:
 
 **Task 1: bokata-product-manager**
 ```
@@ -104,26 +120,26 @@ Do NOT ask the user questions. Focus on: Feature boundary coupling, data model i
 You act as the **neutral coordinator** — you do not add a fourth opinion and you do not arbitrate product trade-offs yourself. Classify each finding from the PM, Designer, and Engineer reviews into one bucket (use each reviewer's `Type` tag, but verify it):
 
 - **(a) Non-conflicting improvement** — incorporate directly into the backbone markdown.
-- **(b) Factual / scope conflict** — decidable against an existing artifact (the input spec/PRD, the Discovery Context, or the project `constitution`). Resolve it deterministically by checking that artifact, apply the fix, and record a one-line entry in `## Trio Reconciliation Notes` citing the artifact. Do not ask the user.
+- **(b) Factual / scope conflict** — decidable against an existing artifact (the input pitch/spec/PRD, the Discovery Context, or the project `constitution`). Resolve it deterministically by checking that artifact, apply the fix, and record a one-line entry in `## Trio Reconciliation Notes` citing the artifact. Do not ask the user.
 - **(c) Genuine product trade-off** — a scope/UX/sustainability judgment with no ground truth in any artifact (e.g., Engineer: "split Feature A into two"; Designer: "keep as one for UX coherence"). This is the human's decision.
 
 **Handling bucket (c):** collect all trade-offs first (never a per-conflict drip). For each, prepare the two positions (attributed to their lens), the one-sentence crux, and a **recommended default** grounded in the `constitution` / Fast Feedback Principle.
-- **Interactive mode (default):** present all trade-offs as a single numbered decision point and wait for the user's choice before writing. Use `AskUserQuestion` if your harness provides it (one question per conflict; options = each lens position plus your recommended default, marked as recommended). If your harness has no such tool, present the same as a numbered plain-text prompt and wait for the reply. Apply the user's selections.
+- **Interactive mode (default):** present all trade-offs as a single numbered decision point and wait for the user's choice before writing. Use your harness's question tool if it provides one (`AskUserQuestion` in Claude Code, `question` in OpenCode; one question per conflict; options = each lens position plus your recommended default, marked as recommended). If your harness has no such tool, present the same as a numbered plain-text prompt and wait for the reply. Apply the user's selections.
 - **Non-interactive mode** (`--no-interactive` flag present, or a headless/automation run): do not block — apply the recommended default for each and record every trade-off in `## Trio Reconciliation Notes` with its two positions, the applied default, and a `⚠ flagged for human review` marker.
 
-**System Task guard (critical):** If a reviewer finding describes system/backend behavior, do NOT default to adding it as a new standalone System Task. Apply the System Task trigger test from `methodology.md`: is this triggered by a direct user action already covered by an existing User Task? If yes — embed it as a note on that User Task's description instead. Only create a new standalone System Task if the finding describes a genuine autonomous workflow transition.
+**System Task guard (critical):** If a reviewer finding describes system/backend behavior, do NOT default to adding it as a new standalone System Task. Apply the System Task trigger test from `bokata-feature-mapper`'s `methodology.md`: is this triggered by a direct user action already covered by an existing User Task? If yes — embed it as a note on that User Task's description instead. Only create a new standalone System Task if the finding describes a genuine autonomous workflow transition.
 
-Produce final `backbone.md` with (a) incorporated, (b) resolved-and-cited, and (c) resolved-by-user-or-default — all (b)/(c) outcomes captured in `## Trio Reconciliation Notes`.
+Produce the final backbone with (a) incorporated, (b) resolved-and-cited, and (c) resolved-by-user-or-default — all (b)/(c) outcomes captured in `## Trio Reconciliation Notes`.
 
 ---
 
 ## Step 4: Stage 2 — Functional Acceptance Criteria (Trio Contribution)
 
-### 4a. Trio Contributes Rules from Their Lenses (Task Subagents, Parallel)
+### 4a. Trio Contributes Rules from Their Lenses (Subagents, Parallel)
 
-**Execution constraint (critical):** Issue all three Task calls together in a **single assistant message** (three tool-use blocks in one turn) — never separately. Set **all three to foreground/blocking execution** (not background/async) so the turn does NOT end until all three results are in hand. Do not proceed, consolidate, or stop until every subagent has returned its result in this same exchange.
+**Execution constraint (critical):** Issue all three subagent calls together in a **single assistant message** (three tool-use blocks in one turn) — never separately. Set **all three to foreground/blocking execution** (not background/async) so the turn does NOT end until all three results are in hand. Do not proceed, consolidate, or stop until every subagent has returned its result in this same exchange.
 
-Spawn three Task subagents in parallel, each contributing Rules from their lens — they do NOT generate Scenarios themselves, only Rules:
+Spawn three subagents in parallel, each contributing Rules from their lens — they do NOT generate Scenarios themselves, only Rules:
 
 **Task 1: PM Contribution**
 ```
@@ -163,8 +179,8 @@ Read all three contributions. Merge them into a single enrichment block (equival
 
 Invoke `bokata-acceptance-criteria`:
 ```
-/bokata:acceptance-criteria --functional
-Input: [final backbone.md]
+bokata-acceptance-criteria --functional
+Input: [final backbone]
 Enrichment: [consolidated Rules from PM/Designer/Engineer]
 Discovery Context: [from Step 2]
 Instruction: "Skip your own Phase 0 discovery — it has been resolved upstream. Use the provided Discovery Context and Enrichment (consolidated Rules from the Product Trio). Proceed directly to Phase 1 (Input Analysis) through Phase 3 (Generate Output), using the --functional depth mode. Return the ## Acceptance Criteria (Functional) section."
@@ -174,84 +190,60 @@ You receive the functional ACs.
 
 ---
 
-## Step 5: Write Backbone Markdown & Render HTML
+## Step 5: Write features.md & Render HTML
 
-Right after reconciling (Step 3) and handling any trade-offs:
+One file holds the backbone and its functional ACs, so a slice can be chosen from a single place:
 
-1. **Write** `docs/initiatives/<initiative-slug>/backbone.md` (the final reconciled markdown)
+1. **Write** `<docs>/<initiative-slug>/features.md` from the features template: the final reconciled backbone, the functional ACs of each User Task placed **under that User Task**, an empty `### Increment options` section per Feature (filled later by `bokata-slice`), and `## Trio Reconciliation Notes`.
 
-2. **Render & Write** `docs/initiatives/<initiative-slug>/backbone.html`:
-   - Using the `html-template.md` conversion rules from the command's resources directory (markdown → semantic HTML)
-   - Build title: `"{{INITIATIVE_NAME}} — Features Backbone"`
-   - Build subtitle: `"User Story Mapping + Trio-Reviewed"`
-   - Convert Features, User Tasks, System Tasks per the template's table
-   - Footer: `"{{INITIATIVE_NAME}} Features Backbone | Generated [DATE] | Command: /bokata:feature-map | Source: [input description]"`
+2. **Render & Write** `<docs>/<initiative-slug>/features.html` (if `html` is true):
+   - Using the [html-template.md](resources/html-template.md) conversion rules (markdown → semantic HTML)
+   - Build title: `"{{INITIATIVE_NAME}} — Features"`
+   - Build subtitle: `"User Story Mapping + Functional ACs, Trio-Reviewed"`
+   - Convert Features, User Tasks, System Tasks, Requirements and Scenarios per the template's table
+   - Footer: `"{{INITIATIVE_NAME}} Features | Generated [DATE] | Skill: bokata-feature-map | Source: [input description]"`
 
-3. **Create & Render** `docs/initiatives/<initiative-slug>/story-map.html`:
-   - Using the `story-map-template.md` from the command's resources directory — **the addressable/column unit is the User Task (Step), not the Feature.** Do not build a `.map-column` per Feature with tasks listed inside it; that structure is wrong (see the template file's own warning about this).
+3. **Create & Render** `<docs>/<initiative-slug>/story-map.html` (if `story_map` is true):
+   - Using the [story-map-template.md](resources/story-map-template.md) — **the addressable/column unit is the User Task (Step), not the Feature.** Do not build a `.map-column` per Feature with tasks listed inside it; that structure is wrong (see the template file's own warning about this).
    - Build title: `"{{INITIATIVE_NAME}} — Story Mapping"`
-   - Build subtitle: `"Backbone (Features) → Steps (User Tasks) → Releases (Increments, by priority)"`
+   - Build subtitle: `"Backbone (Features) → Steps (User Tasks) → Releases (Slices)"`
    - Row 1: render each Feature as a `.feature-header` spanning its own User Task count (`grid-column: span N`), ordered by backbone journey — this is a header only, it holds no cards
    - Row 2: render each User Task as its own `.step-card` column (`data-task-id="{{TASK_ID}}"`), in the same order as listed under its parent Feature
    - Row 3: give every Step column exactly one `.release-cell` placeholder ("Not yet sliced") — one per User Task, not one per Feature
    - Set `{{TOTAL_STEP_COUNT}}` = total User Tasks across all Features (the grid's column count)
-   - Footer: `"{{INITIATIVE_NAME}} Story Mapping | Generated [DATE] | Command: /bokata:feature-map | Features: {{NUM_FEATURES}} | Steps: {{NUM_TASKS}} | Sliced: 0/{{NUM_FEATURES}}"`
+   - Footer: `"{{INITIATIVE_NAME}} Story Mapping | Generated [DATE] | Skill: bokata-feature-map | Features: {{NUM_FEATURES}} | Steps: {{NUM_TASKS}} | Sliced: 0/{{NUM_FEATURES}}"`
 
 ---
 
-## Step 6: Write AC Markdown & Render HTML
+## Step 6: Verification Gate (No New Rendering Here)
 
-Right after consolidating trio contributions and invoking AC skill (Step 4b above):
+This step is a **checklist verification** only — no new rendering work happens here:
 
-1. **Write** `docs/initiatives/<initiative-slug>/acceptance-criteria-functional.md` (the AC markdown)
-
-2. **Render & Write** `docs/initiatives/<initiative-slug>/acceptance-criteria-functional.html`:
-   - Using the `html-template.md` conversion rules from the command's resources directory
-   - Build title: `"{{INITIATIVE_NAME}} — Acceptance Criteria (Functional)"`
-   - Build subtitle: `"Requirements + Scenarios (Product-Level)"`
-   - Convert Requirements, Scenarios per the template's table (`.requirement`, `.scenario`, Gherkin keywords)
-   - Footer: `"{{INITIATIVE_NAME}} Acceptance Criteria (Functional) | Generated [DATE] | Command: /bokata:feature-map | Depth: functional | Source: Features Backbone"`
+- [ ] `<docs>/<initiative-slug>/features.md` exists and is final (backbone + functional ACs + empty Increment options per Feature)
+- [ ] `<docs>/<initiative-slug>/features.html` exists (if `html`)
+- [ ] `<docs>/<initiative-slug>/story-map.html` exists (if `story_map`)
 
 ---
 
-## Step 7: Verification Gate (No New Rendering Here)
-
-This step is now a **checklist verification** only — no new rendering work happens here:
-
-- [ ] `docs/initiatives/<initiative-slug>/backbone.md` exists and is final
-- [ ] `docs/initiatives/<initiative-slug>/backbone.html` exists
-- [ ] `docs/initiatives/<initiative-slug>/story-map.html` exists
-- [ ] `docs/initiatives/<initiative-slug>/acceptance-criteria-functional.md` exists and is final
-- [ ] `docs/initiatives/<initiative-slug>/acceptance-criteria-functional.html` exists
-
-(All HTML rendering now happens immediately after its corresponding .md is finalized, not deferred to Step 7.)
-
----
-
-## Step 8: Summary & Next Steps (Main Thread)
+## Step 7: Summary & Next Steps (Main Thread)
 
 Print to user:
 ```
 ## ✓ Feature Mapping Complete
 
 **Initiative:** {{INITIATIVE_NAME}}
-**Location:** docs/initiatives/{{INITIATIVE_SLUG}}/
+**Location:** <docs>/{{INITIATIVE_SLUG}}/
 
 **Artifacts created:**
-- backbone.md / .html ✅ — {{NUM_FEATURES}} Features, {{NUM_TASKS}} User Tasks
-- acceptance-criteria-functional.md / .html ✅ — {{NUM_REQUIREMENTS}} Requirements, {{NUM_SCENARIOS}} Scenarios (functional depth)
-- story-map.html ✅ — Patton-style board (Features spanning the backbone header, User Tasks as individual Step columns, release tiers to be filled per-Step by slicing)
+- features.md / .html ✅ — {{NUM_FEATURES}} Features, {{NUM_TASKS}} User Tasks, {{NUM_REQUIREMENTS}} Requirements, {{NUM_SCENARIOS}} Scenarios (functional depth)
+- story-map.html ✅ — Patton-style board (Features spanning the backbone header, User Tasks as individual Step columns, release rows filled by each slice)
 
 **Trio Review Notes:**
-[If any reconciliation notes exist: "See backbone.md for [N] reconciliation notes flagged during PM/Designer/Engineer review."]
+[If any reconciliation notes exist: "See features.md for [N] reconciliation notes flagged during PM/Designer/Engineer review."]
 
 ---
 
-**Next step:** Run `/bokata:slice-feature [feature name]` to decompose a Feature into a Walking Skeleton + Increments Backlog. The story-map will auto-update with each feature you slice.
-
-**Example:** `/bokata:slice-feature "Tourist Discovers Nearby Places"`
-
-**Story Map Note:** The story-map.html board will accumulate each feature's Walking Skeleton and Increments as you slice them — all in one living document. No need to manage multiple files.
+**Next step:** Run `bokata-slice {{INITIATIVE_SLUG}}` and pick 1–3 Features that make sense together. Suggested first slice: [the thinnest group of Features that makes the journey usable end to end].
 ```
 
 ---
@@ -263,7 +255,7 @@ Print to user:
 - [ ] All User Tasks are in [Verb] [Object] format (no Actor)
 - [ ] **All System Tasks follow the workflow-transition test from methodology.md** (only autonomous state transitions remain standalone; all direct-user-action responses are embedded in User Task descriptions)
 - [ ] **System Tasks use naming format `System Task {N}.{M}: [Verb] [Object]`** (with explicit Trigger field)
-- [ ] **Features/User Tasks/System Tasks use correct heading levels:** `#### Feature`, `##### User Task`, `##### System Task` (not bold text)
+- [ ] **Features/User Tasks/System Tasks use correct heading levels** as in the features template (not bold text)
 - [ ] Trio reviews are visibly mentioned in the narrative (or if they had no issues, explicitly state that)
 - [ ] Trio Reconciliation Notes section is present if any conflicts were resolved
 - [ ] Functional AC Requirements use SHALL/SHOULD language

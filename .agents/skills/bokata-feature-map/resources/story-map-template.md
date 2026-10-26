@@ -174,7 +174,7 @@ Use this base for all story-map renders:
   }
 
   /* Row 2: Steps (User Tasks) — ONE COLUMN EACH, grid-row:2, auto-placed one per grid column.
-     This IS the addressable unit: data-task-id lives here, and is what /bokata:slice-feature
+     This IS the addressable unit: data-task-id lives here, and is what bokata-slice
      targets when replacing "Not yet sliced" with real skeleton/increment cards. */
   .step-card {
     grid-row: 2;
@@ -366,7 +366,7 @@ Build the grid as three (or more) DOM passes, all children of the same `.map-gri
 <!-- ...one .feature-header per Feature, each with its own span count, in journey order... -->
 
 <!-- PASS 2 (row 2): one div per STEP (User Task) — this is the real column unit.
-     data-task-id is what /bokata:slice-feature will later select to update. -->
+     data-task-id is what bokata-slice will later select to update. -->
 <div class="step-card" data-task-id="RTMVP-TASK-001">Enable geolocation permissions on first launch</div>
 <div class="step-card" data-task-id="RTMVP-TASK-002">Verify location is active</div>
 <!-- ...one .step-card per User Task, in the SAME order as the backbone lists them under each Feature... -->
@@ -378,7 +378,7 @@ Build the grid as three (or more) DOM passes, all children of the same `.map-gri
 <!-- ...one .release-cell per Step, same order as pass 2, so each lands under its own Step column... -->
 ```
 
-After `/bokata:slice-feature` has run for a Feature, that Feature's Step columns get their placeholder(s) replaced in place (see Update Algorithm below):
+After `bokata-slice` has run for a Feature, that Feature's Step columns get their placeholder(s) replaced in place (see Update Algorithm below):
 
 ```html
 <!-- A sliced Step's column: skeleton item at row 3 (highest priority, nearest the header),
@@ -405,7 +405,7 @@ If a Feature has System Tasks (autonomous transitions — see methodology.md), t
 
 ## Markdown→HTML Conversion Rules
 
-When building the story-map HTML from `backbone.md` (and later `slicing.md`), use these mappings:
+When building the story-map HTML from `features.md` (and later the slice file), use these mappings:
 
 | Source (Markdown)              | Target (HTML)                                 | Notes |
 |------------------------------|--------------------------------------------|-------|
@@ -421,10 +421,10 @@ When building the story-map HTML from `backbone.md` (and later `slicing.md`), us
 
 ## Slice-Feature Update Algorithm (In-Place Modification)
 
-When `/bokata:slice-feature [Feature]` completes:
+When `bokata-slice` completes:
 
 1. **Read** the existing `docs/initiatives/<slug>/story-map.html`
-2. **Parse `slicing.md`** for its `**[User Task Name]**` tags (this tagging is already required of `bokata-feature-slicer`'s output — see its Output Checklist: "Backlog grouped by User Task", "All items use correct tag format") — group Walking Skeleton items and Increments by which User Task they belong to
+2. **Parse the slice file** for its `**[User Task Name]**` tags (this tagging is already required of `bokata-feature-slicer`'s output — see its Output Checklist: "Backlog grouped by User Task", "All items use correct tag format") — group Walking Skeleton items and Increments by which User Task they belong to
 3. **For each tagged User Task**, locate its column: `document.querySelector('.step-card[data-task-id="TASK_ID"]')` and find that column's numeric grid position (its column index within the full grid, not per-Feature)
 4. **Replace** that Step's `.release-cell` placeholder with a `.skeleton-item-card` (`grid-row: 3`, same `grid-column` as the Step) for its Walking Skeleton item, then append `.increment-card` divs below it (`grid-row: 4, 5, ...`, same `grid-column`) for its Increments, ordered by priority
 5. **Preserve every other Step's column untouched** — including other Steps within the *same* Feature that this slicing pass didn't address; a Feature is not an atomic update unit, its Steps are
@@ -437,7 +437,7 @@ const soup = parse(existing_html);
 const taskGroups = parseSlicingByUserTaskTag(slicing_md); // { "Task Name": { skeleton: [...], increments: [...] } }
 
 for (const [taskName, items] of Object.entries(taskGroups)) {
-  const taskId = resolveTaskIdFromBackbone(taskName); // cross-reference backbone.md's Task ID comment
+  const taskId = resolveTaskIdFromBackbone(taskName); // cross-reference features.md's Task ID comment
   const stepCard = soup.select_one(`.step-card[data-task-id="${taskId}"]`);
   const columnIndex = getGridColumnIndex(stepCard); // this Step's absolute column position in the grid
 
@@ -469,24 +469,24 @@ write_and_republish(soup.to_html());
 ## Example Footer Generation
 
 ```
-Real Tourism MVP Story Mapping | Generated 2026-07-16 | 7 Features | 40 Steps | Sliced: 3/7 | Command: /bokata:feature-map → /bokata:slice-feature
+Real Tourism MVP Story Mapping | Generated 2026-07-16 | 7 Features | 40 Steps | Sliced: 3/7 | Skills: bokata-feature-map → bokata-slice
 ```
 
 ---
 
 ## Notes for Orchestrator Implementation
 
-- **Initial Creation** (in `/bokata:feature-map` Step 3c):
+- **Initial Creation** (in `bokata-feature-map` Step 3c):
   - Row 1: one `.feature-header` per Feature, spanning its Step count, in journey order
   - Row 2: one `.step-card` per User Task (with `data-task-id`), auto-placed under its parent Feature's span
   - Row 3: every Step gets a `.release-cell` placeholder ("Not yet sliced") — one per Step, not one per Feature
   - Footer shows "Sliced: 0/N" (N = Feature count)
 
-- **Incremental Updates** (in `/bokata:slice-feature`):
-  - Only the Step columns (`data-task-id`) tagged in that run's `slicing.md` are modified — a single slicing pass may touch some but not all Steps within the sliced Feature
+- **Incremental Updates** (in `bokata-slice`):
+  - Only the Step columns (`data-task-id`) tagged in that run's slice file are modified — a single slicing pass may touch some but not all Steps within the sliced Feature
   - Untouched Steps — in the sliced Feature or any other — keep their original `.release-cell` placeholder
   - Footer updates to show "Sliced: N/M" as more Features are sliced (a Feature counts as "sliced" once at least one of its Steps has a real skeleton/increment card — not necessarily all of them)
-  - Multiple invocations of `slice-feature` on different Features accumulate in the same file without conflict, since each only ever touches its own Steps' columns
+  - Multiple invocations of `bokata-slice` on different Features accumulate in the same file without conflict, since each only ever touches its own Steps' columns
 
 ---
 

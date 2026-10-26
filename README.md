@@ -1,122 +1,136 @@
 # Bokata
 
-**Product Trio SDD Framework** — Spec-Driven Development with Teresa Torres' Product Trio methodology.
+**Shape, slice and build in small steps** — a small, configurable set of agent skills for
+Claude Code, OpenCode, Codex and Cursor, built on Teresa Torres' Product Trio.
 
-Bokata helps teams generate Features Backbones, Acceptance Criteria, and Walking Skeletons through collaborative Product Trio reviews (PM, Designer, Engineer) — all powered by AI agents.
+```
+shape  →  feature map  →  slice  →  plan  →  code (TDD)
+pitch     features        slice     checklist  commits
+```
 
-## Supported Harnesses
+- **Skills only, no commands.** Every phase is a skill you invoke by name. Use all of them or
+  just the ones you want.
+- **Spec-first, code as truth.** The documents bokata writes are working material for the
+  initiative at hand. Delete them when it ships and nothing is lost: the tests describe the
+  behaviour, and the ADRs record the *why*.
+- **Product Trio** (PM, Designer, Engineer) subagents review approaches, features and slices
+  in parallel; you coordinate and decide.
+- **Agnostic.** Output folder, templates, the grill method and the code method are set in
+  `.bokata.json`. Orchestration (Orca, tmux, plain terminals) stays yours.
 
-| Harness | Skills | Agents | Commands | Trio Parallel |
-|---------|--------|--------|----------|---------------|
-| **Claude Code** | ✅ | ✅ | ✅ | ✅ Task tool |
-| **OpenCode** | ✅ | ✅ | ✅ | ✅ Task tool |
-| **Cursor** | ✅ | ✅ | ✅ | ✅ Task tool |
-| **Codex** | ✅ | ✅ | ✅ | ✅ spawn_agents |
-
-## Installation
+## Install
 
 ```bash
-npx bokata@latest install
+npx bokata@latest install          # detects .claude/ .cursor/ .opencode/ .codex/
+npx bokata@latest install --claude --opencode
+npx bokata@latest sync             # regenerate agents after editing .bokata.json
 ```
 
-Run this from your project root. `bokata install` auto-detects which harnesses you already use — `.claude/`, `.cursor/`, `.opencode/`, `.codex/` — and installs skills, agents, and commands for each. If none are found, it asks interactively which ones to set up.
+- Skills are copied once to `.agents/skills/` and **symlinked** from `.claude/skills/` and
+  `.cursor/skills/`. OpenCode and Codex read `.agents/skills/` directly.
+- Agents are generated per harness from one neutral source: `.claude/agents/*.md`,
+  `.opencode/agents/*.md`, `.codex/agents/*.toml`, `.cursor/agents/*.md`.
+- The model of each role (`trio`, `executor`, `reviewer`) is asked at install time and saved
+  in `.bokata.json`; change it there and run `sync`.
+- Re-running `install` is safe. It also removes the commands bokata 2.x installed. (2.x also
+  wrote `~/.codex/prompts/bokata-*.md` globally; delete those by hand if you used Codex.)
+- The default grill method is [`grill-with-docs`](https://github.com/mattpocock/skills) by
+  Matt Pocock. Install it with its own installer, or point `methods.grill` elsewhere.
 
-Non-interactive / CI usage, or to target specific harnesses:
+## The flow
+
+| Size | Path |
+|---|---|
+| **S** — a fix or tweak | plan mode → `bokata-tdd` (no documents) |
+| **M** — one clear feature | `bokata-shape` → `bokata-slice` (single mode) → `bokata-plan` → `code-executor` |
+| **L** — several features | `bokata-shape` → `bokata-feature-map` → `bokata-slice` (1–3 features) → `bokata-plan` → `code-executor` |
+
+`bokata-shape` proposes the size; you confirm it.
+
+### Skills
+
+| Skill | What it does | Writes |
+|---|---|---|
+| `bokata-shape` | Grill (the configured method) + Shape Up shaping: narrow the problem, 2–3 approaches as Mermaid breadboards (low-fi HTML sketch when layout matters), one trio pass, rabbit holes and no-gos | `pitch.md` |
+| `bokata-feature-map` | Features Backbone + functional ACs with the trio; asks only about gaps in its input | `features.md` (+ `.html`, `story-map.html`) |
+| `bokata-slice` | Pick 1–3 features → increment options → you choose the slice (walking skeleton first) → concrete ACs for the chosen increments only | `slices/<nn>-<name>.md` (+ `.html`) |
+| `bokata-plan` | A contract for your harness's own plan mode: the plan becomes checklists under each increment | the slice's `Plan:` |
+| `bokata-tdd` | Default code method: strict small-step TDD, Kent Beck's simple design, evidence rules | commits |
+| `bokata-status` | Read-only: phase, active slice, next step, open unknowns, features not yet sliced | — |
+| `bokata-feature-mapper`, `bokata-feature-slicer`, `bokata-acceptance-criteria` | The methods the phases use; usable on their own | — |
+
+### Agents
+
+| Agent | Role | Access |
+|---|---|---|
+| `bokata-product-manager` / `-designer` / `-engineer` | Product Trio reviewers and rule contributors | read |
+| `code-executor` | Builds a planned slice with `methods.code`; keeps the slice checklist, test mapping and unknowns current; never pushes | write |
+| `design-reviewer` | Reviews one step's diff against the four rules of simple design | read |
+
+During trio reviews the **main thread** is the neutral coordinator: it applies
+non-conflicting findings, settles factual conflicts against the artifacts, and escalates
+genuine product trade-offs to you as one decision point with a recommended default.
+
+### Hierarchy
+
+```
+Initiative (pitch.md)
+ └ Features (features.md — also holds each feature's increment options)
+    └ Slice (1–3 features you pick → usable end to end)
+       └ Scope (the part of one feature in this slice; Unknowns ▲ / none ▼)
+          └ Increment (functional on its own; must-have or ~nice-to-have)
+             └ Steps (the plan checklist, checked off commit by commit)
+```
+
+## Running the executor
+
+The plan ends with a hand-off line. How you launch it is up to you:
 
 ```bash
-npx bokata@latest install --claude --cursor
-npx bokata@latest install --yes   # only install what was auto-detected, never prompt
+# OpenCode, in a worktree
+opencode run --agent code-executor "Build slice docs/initiatives/<slug>/slices/01-<name>.md"
+
+# Claude Code
+claude --agent code-executor "Build slice docs/initiatives/<slug>/slices/01-<name>.md"
+
+# An orchestrator such as Orca: plan with one harness, then ask it to spawn
+# code-executor in a new worktree with the hand-off line.
 ```
 
-Re-running `install` is safe — it overwrites previously installed files, so it doubles as the update path.
+Scopes marked `Parallel-safe: yes` can run in separate worktrees at the same time.
 
-**Note on Codex:** Codex CLI only discovers custom slash-commands from the global `~/.codex/prompts/` directory (not per-project), so `/bokata-feature-map` and `/bokata-slice-feature` are installed there — shared across all your Codex projects, not just this repo. Skills and agents for Codex stay project-scoped as usual (`.codex/skills/`, `.codex/agents/`).
+## Configuration — `.bokata.json`
 
-## Usage
+Everything is optional; these are the defaults.
 
-### Feature Mapping
-
-Generate a Features Backbone and Functional Acceptance Criteria:
-
-```
-/bokata:feature-map [initiative description]
-```
-
-**Outputs:**
-- `docs/initiatives/<slug>/backbone.md` — Features, User Tasks, System Tasks
-- `docs/initiatives/<slug>/backbone.html` — HTML report
-- `docs/initiatives/<slug>/story-map.html` — Patton-style story map
-- `docs/initiatives/<slug>/acceptance-criteria-functional.md` — Functional ACs
-- `docs/initiatives/<slug>/acceptance-criteria-functional.html` — HTML report
-
-### Feature Slicing
-
-Decompose a Feature into a Walking Skeleton + Increments Backlog:
-
-```
-/bokata:slice-feature [feature name]
+```jsonc
+{
+  "docs": "docs/initiatives",          // where initiative folders go
+  "language": "auto",                  // conversation follows the user
+  "html": true,                        // render .html next to features and slices
+  "story_map": true,                   // Patton story map for feature maps
+  "memory": {                          // long-lived files bokata reads (and shape updates)
+    "constitution": "CONSTITUTION.md",
+    "glossary": "CONTEXT.md",
+    "standards": "CODING_STANDARDS.md",
+    "adrs": "docs/adrs",
+    "adr_template": null               // null = bokata's light MADR template
+  },
+  "templates": { "pitch": null, "features": null, "slice": null },  // your own templates
+  "methods": { "grill": "grill-with-docs", "code": "bokata-tdd" },  // swap a method skill
+  "harnesses": [],                     // filled by install
+  "models": { "codex": { "trio": "gpt-5.4" } }  // per harness: trio | executor | reviewer
+}
 ```
 
-**Outputs:**
-- `docs/initiatives/<slug>/<feature>/slicing.md` — Walking Skeleton + Increments
-- `docs/initiatives/<slug>/<feature>/slicing.html` — HTML report
-- `docs/initiatives/<slug>/<feature>/acceptance-criteria-concrete.md` — Concrete ACs
-- `docs/initiatives/<slug>/<feature>/acceptance-criteria-concrete.html` — HTML report
-- `docs/initiatives/<slug>/story-map.html` — Updated with sliced feature
+Cursor's agent format is generated on a best-effort basis (`name`, `description`, `model`,
+`readonly`); skills work in Cursor either way.
 
-## Architecture
+## Development
 
+```bash
+npm test      # installer tests (node:test, no dependencies)
 ```
-.agents/skills/                     ← Single source, copied as-is into every harness at install time
-├── bokata-feature-mapper/          ← User Story Mapping methodology
-├── bokata-feature-slicer/          ← Walking Skeleton + Increments
-└── bokata-acceptance-criteria/     ← Gherkin AC generation
-
-bin/bokata.js + src/install.js      ← CLI entry point (npx bokata install)
-
-agents/                             ← Pure prompts (harness-agnostic)
-├── bokata-product-coordinator.md   ← Reconciliation rules reference (NOT installed as agent)
-├── bokata-product-manager.md       ← Viability & Value lens (reviewer + contributor)
-├── bokata-product-designer.md      ← Usability & UX/UI Craft lens (reviewer + contributor)
-└── bokata-product-engineer.md      ← Feasibility & Technical Sustainability lens (reviewer + contributor)
-
-commands/                           ← Orchestration by execution model
-├── task-parallel/                  ← Claude Code + Cursor + OpenCode (Task tool)
-│   ├── feature-map.md              ← Main thread: invokes skill → 3 reviewers → reconciles → writes
-│   └── slice-feature.md            ← Main thread: invokes skill → 3 reviewers → reconciles → writes
-└── codex/                          ← spawn_agents parallel
-    ├── feature-map.md              ← Main thread: same pattern as task-parallel
-    └── slice-feature.md            ← Main thread: same pattern as task-parallel
-```
-
-## Product Trio Roles
-
-| Role | Lens | Role Type |
-|------|------|-----------|
-| **Product Coordinator** | Neutral orchestration | **Main thread role** — the command itself acts as coordinator (invokes skills, launches reviewers, reconciles findings, escalates trade-offs) |
-| **Product Manager** | Viability & Value | Reviewer + AC contributor (Task subagent) |
-| **Product Designer** | Usability & UX/UI Craft | Reviewer + AC contributor (Task subagent) |
-| **Product Engineer** | Feasibility & Technical Sustainability | Reviewer + AC contributor (Task subagent) |
-
-No single role "leads" — the main thread coordinates and all three lenses review from their perspective.
-
-## Methodology
-
-Bokata follows Teresa Torres' Product Trio framework combined with:
-- **User Story Mapping** (Patton) for feature backbone
-- **Example Mapping** for acceptance criteria
-- **Walking Skeleton** pattern for incremental delivery
-- **Spec-Driven Development** for testable specifications
-
-## Conflict Handling
-
-During trio review, the **main thread** (the command itself) acts as a **neutral orchestrator** — no fourth opinion, no arbitration of product trade-offs. Each reviewer finding is routed into one of three buckets:
-
-- **Non-conflicting** — incorporated directly.
-- **Factual / scope conflict** — resolved deterministically against the backbone, ACs, Discovery Context, or constitution, and noted with the artifact that settled it.
-- **Genuine product trade-off** (value↔UX / value↔sustainability, no ground truth) — escalated to the human as a **single consolidated decision point** with positions from each lens and a recommended default.
-
-Interactive runs ask before continuing; headless runs (`--no-interactive`, `codex exec`, CI) apply the recommended default and flag the trade-off in `Trio Reconciliation Notes`. Every resolution is recorded in the output artifact.
 
 ## License
 
