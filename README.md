@@ -119,9 +119,24 @@ Everything is optional; these are the defaults.
   "templates": { "pitch": null, "features": null, "slice": null },  // your own templates
   "methods": { "grill": "grill-with-docs", "code": "bokata-tdd" },  // swap a method skill
   "harnesses": [],                     // filled by install
-  "models": { "codex": { "trio": "gpt-5.4" } }  // per harness: trio | executor | reviewer
+  "models": { … }                      // per harness: trio | reviewer | executor (see below)
 }
 ```
+
+### Default models
+
+Planning and analysis (the trio and the design reviewer) get a planning model; writing code
+(the executor) gets a coding model. Planning itself runs in your main session — open it with
+the planning model of your harness.
+
+| Harness | Plan and analyse (`trio`, `reviewer`) | Write code (`executor`) |
+|---|---|---|
+| Claude Code | `opus` | `sonnet` |
+| OpenCode | `opencode-go/glm-5.3-flash` | `opencode-go/deepseek-v4.1-flash` |
+| Cursor | `glm-flash` | `sonnet` |
+| Codex | `gpt-5.6-sol` | `gpt-5.6-luna` |
+
+Set a role to `null` to use the harness's own default model instead.
 
 Cursor's agent format is generated on a best-effort basis (`name`, `description`, `model`,
 `readonly`); skills work in Cursor either way.

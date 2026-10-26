@@ -137,7 +137,7 @@ async function askModels(config, activeKeys) {
       for (const role of ROLES) {
         const current = config.models[harness][role];
         const answer = await ask(`  ${harness} · ${role}${current ? ` [${current}]` : ''}: `);
-        if (answer === '-') delete config.models[harness][role];
+        if (answer === '-') config.models[harness][role] = null;
         else if (answer) config.models[harness][role] = answer;
       }
     }

@@ -93,7 +93,28 @@ test('read-only agents cannot edit', () => {
   assert.match(read(dir, '.claude', 'agents', 'design-reviewer.md'), /^tools: Read, Grep, Glob, Bash$/m);
   assert.match(read(dir, '.opencode', 'agents', 'bokata-product-manager.md'), /^ {2}edit: deny$/m);
   assert.match(read(dir, '.codex', 'agents', 'bokata-product-engineer.toml'), /^sandbox_mode = "read-only"$/m);
-  assert.match(read(dir, '.codex', 'agents', 'bokata-product-engineer.toml'), /^model = "gpt-5\.4"$/m);
+  assert.match(read(dir, '.codex', 'agents', 'bokata-product-engineer.toml'), /^model = "gpt-5\.6-sol"$/m);
+});
+
+test('defaults: planning roles get a planning model, the executor a coding model', () => {
+  const dir = project();
+  bokata(dir, 'install', '--claude', '--opencode', '--codex', '--cursor', '--yes');
+
+  assert.match(read(dir, '.claude', 'agents', 'bokata-product-manager.md'), /^model: opus$/m);
+  assert.match(read(dir, '.claude', 'agents', 'code-executor.md'), /^model: sonnet$/m);
+  assert.match(read(dir, '.opencode', 'agents', 'design-reviewer.md'), /^model: opencode-go\/glm-5\.3-flash$/m);
+  assert.match(read(dir, '.opencode', 'agents', 'code-executor.md'), /^model: opencode-go\/deepseek-v4\.1-flash$/m);
+  assert.match(read(dir, '.codex', 'agents', 'code-executor.toml'), /^model = "gpt-5\.6-luna"$/m);
+  assert.match(read(dir, '.cursor', 'agents', 'bokata-product-designer.md'), /^model: glm-flash$/m);
+});
+
+test('a role set to null falls back to the harness default model', () => {
+  const dir = project((d) => {
+    fs.writeFileSync(path.join(d, '.bokata.json'), JSON.stringify({ models: { claude: { executor: null } } }));
+  });
+  bokata(dir, 'install', '--claude', '--yes');
+
+  assert.doesNotMatch(read(dir, '.claude', 'agents', 'code-executor.md'), /^model:/m);
 });
 
 test('writes .bokata.json and keeps the user values on reinstall', () => {

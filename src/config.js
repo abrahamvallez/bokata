@@ -18,9 +18,17 @@ const DEFAULTS = {
   templates: { pitch: null, features: null, slice: null },
   methods: { grill: 'grill-with-docs', code: 'bokata-tdd' },
   harnesses: [],
-  // Model per harness and role (trio | executor | reviewer). Missing = the harness default.
+  // Model per harness and role. trio and reviewer analyse and plan; executor writes code.
+  // A role set to null (or missing) uses the harness's own default model.
   models: {
-    codex: { trio: 'gpt-5.4' }
+    claude: { trio: 'opus', reviewer: 'opus', executor: 'sonnet' },
+    opencode: {
+      trio: 'opencode-go/glm-5.3-flash',
+      reviewer: 'opencode-go/glm-5.3-flash',
+      executor: 'opencode-go/deepseek-v4.1-flash'
+    },
+    cursor: { trio: 'glm-flash', reviewer: 'glm-flash', executor: 'sonnet' },
+    codex: { trio: 'gpt-5.6-sol', reviewer: 'gpt-5.6-sol', executor: 'gpt-5.6-luna' }
   }
 };
 
