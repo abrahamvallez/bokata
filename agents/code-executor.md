@@ -31,6 +31,8 @@ contract below, whatever the method.
   that no ADR covers, stop: add it to `Unknowns` and ask. You never write ADRs.
 - **Definition of done** from `AGENTS.md` at the end of each increment, with the real output.
 - **Never push, merge, stash, amend or rebase.** Stage explicit paths only.
+- **Never launch another harness or agent CLI** (`opencode`, `claude`, `codex`…) — only the
+  subagents your method asks for, such as `design-reviewer`.
 - When every must-have of the slice is checked, set the slice `Status: done` and report:
   commits, deviations (also written under `Notes`), open `~` items, and checks still pending.
 
