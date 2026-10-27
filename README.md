@@ -56,7 +56,7 @@ npx bokata@latest sync             # regenerate agents after editing .bokata.jso
 | `bokata-shape` | Grill (the configured method) + Shape Up shaping: narrow the problem, 2–3 approaches as Mermaid breadboards (low-fi HTML sketch when layout matters), one trio pass, rabbit holes and no-gos | `pitch.md` |
 | `bokata-feature-map` | Features Backbone + functional ACs with the trio; asks only about gaps in its input | `features.md` (+ `.html`, `story-map.html`) |
 | `bokata-slice` | Pick 1–3 features → increment options → you choose the slice (walking skeleton first) → concrete ACs for the chosen increments only | `slices/<nn>-<name>.md` (+ `.html`) |
-| `bokata-plan` | A contract for your harness's own plan mode: the plan becomes checklists under each increment | the slice's `Plan:` |
+| `bokata-plan` | A contract for your harness's own plan mode: the plan becomes checklists under each increment, starting with its acceptance test | the slice's `Plan:` |
 | `bokata-tdd` | Default code method: an acceptance test per increment, then strict small-step TDD with evidence rules | commits |
 | `bokata-refactor` | Default refactor method: Kent Beck's four rules of simple design, tidyings, code smells mapped to the move that fixes each | `refactor` commits |
 | `bokata-status` | Read-only: phase, active slice, next step, open unknowns, features not yet sliced | — |
@@ -140,7 +140,7 @@ Bokata decides **what** each phase produces and **where** it goes; a method skil
 | Slot | Default | Loaded by | The job |
 |---|---|---|---|
 | `grill` | `grill-with-docs` | `bokata-shape` | Interview the user until the problem is narrow |
-| `domain` | `domain-modeling` | `bokata-shape`, `bokata-feature-map`, `bokata-slice` | Challenge terms against the glossary; write glossary terms and ADRs as they settle |
+| `domain` | `domain-modeling` | `bokata-shape`, `bokata-feature-map`, `bokata-slice`; `bokata-plan` only for a concept the glossary lacks | Challenge terms against the glossary; write glossary terms and ADRs as they settle |
 | `code` | `bokata-tdd` | `code-executor` | Turn plan steps into tested commits |
 | `refactor` | `bokata-refactor` | `bokata-tdd`, `design-reviewer` | Change structure without changing behaviour, and name what to change |
 

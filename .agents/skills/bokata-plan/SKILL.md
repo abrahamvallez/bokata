@@ -11,13 +11,14 @@ in what shape**, so that the executor (often another tool and another model) and
 
 ## Configuration
 
-Read `.bokata.json` at the project root if it exists (`docs` defaults to `docs/initiatives`).
+Read `.bokata.json` at the project root if it exists (`docs` defaults to `docs/initiatives`,
+`memory.glossary` to `GLOSSARY.md`, `methods.domain` to `domain-modeling`).
 
 ## 1. Read
 
 - The slice file `<docs>/<slug>/slices/<nn>-<name>.md` — its scopes, increments and scenarios.
-- The pitch's rabbit holes and no-gos, the constitution, `AGENTS.md`, and the ADRs that touch
-  the area.
+- The pitch's rabbit holes and no-gos, the constitution, `AGENTS.md`, the glossary, and the
+  ADRs that touch the area.
 - The code the slice touches. Use read-only explore subagents in parallel if your harness has
   them. Never assume an API exists: find it.
 
@@ -25,8 +26,16 @@ Read `.bokata.json` at the project root if it exists (`docs` defaults to `docs/i
 
 For every increment, write the steps that build it:
 
+- **The first step of an increment is its acceptance test**: the scenario as one test at the
+  highest seam the project's unit runner reaches cheaply, committed as an expected failure
+  (the code method says how). Name the seam — it is a design decision, so make it here.
+  Skip it when the first step's own test already is the scenario.
 - **One step = one small, tested change** that ends in a commit: roughly one test file and
   one or two production files. Each step names the scenario (or part of it) it proves.
+- Name steps, functions and types with the glossary's words. A domain concept the glossary
+  lacks is an owner decision (below): once the user settles it, load the skill in
+  `methods.domain` (skip it if `null`) and add the term to the glossary — the term, never its
+  implementation.
 - Order the steps the way the project builds (see `AGENTS.md`; for example domain → use case
   → view model → component → copy).
 - Order the increments: must-haves first, `~` last, dependencies before dependants.
@@ -34,9 +43,9 @@ For every increment, write the steps that build it:
   scope's steps touch; otherwise `no`.
 - Add to a scope's `Unknowns` anything you could not settle from the code.
 - Decisions that only the user can make (two valid readings, a trade-off, a new pattern or
-  dependency): **ask them now**, one at a time with your recommendation, and record each
-  answer under `Notes` as `Owner decision: …`. A new pattern that needs an ADR is an owner
-  decision too.
+  dependency): **ask them now**, in rounds — all of them at once, numbered, each with your
+  recommendation and worded so "yes" accepts it. Record each answer under `Notes` as
+  `Owner decision: …`. A new pattern that needs an ADR is an owner decision too.
 
 Do not write code. Do not change the acceptance criteria: if one is wrong or missing, stop and
 tell the user — it goes back to `bokata-slice`.
@@ -47,6 +56,7 @@ Replace each increment's `Plan:` placeholder with checkboxes:
 
 ```markdown
 Plan:
+- [ ] Acceptance: "chip filters the list" in `useLibraryViewModel.spec`, marked expected failure
 - [ ] Domain: `hasDrawings(clip)` pure rule — proves "legacy clip with draws counts"
 - [ ] View model: filter flag in `useLibraryViewModel` — proves "chip filters the list"
 - [ ] Chip in `LibraryToolbar` + copy in every locale — proves "chip shows its state"

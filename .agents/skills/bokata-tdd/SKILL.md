@@ -38,8 +38,9 @@ first step of an increment (acceptance-test-driven development, the outer loop):
 4. Build the increment with the inner loop below, in the project's build order. The step that
    makes the scenario pass removes the marker **in the same commit**.
 
-If the first step's test already *is* the scenario (a pure domain rule, say), the two loops are
-one: skip this.
+A plan written with `bokata-plan` lists this as the increment's first step and names the seam;
+use that seam. If the first step's test already *is* the scenario (a pure domain rule, say),
+the two loops are one: skip this.
 
 ## The loop, once per step
 
