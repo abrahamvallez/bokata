@@ -10,13 +10,19 @@ const DEFAULTS = {
   story_map: true,
   memory: {
     constitution: 'CONSTITUTION.md',
-    glossary: 'CONTEXT.md',
+    glossary: 'GLOSSARY.md',
     standards: 'CODING_STANDARDS.md',
     adrs: 'docs/adrs',
     adr_template: null
   },
   templates: { pitch: null, features: null, slice: null },
-  methods: { grill: 'grill-with-docs', code: 'bokata-tdd' },
+  // Method slots: each names the skill that does that job. Swap one by naming another skill.
+  methods: {
+    grill: 'grill-with-docs',
+    domain: 'domain-modeling',
+    code: 'bokata-tdd',
+    refactor: 'bokata-refactor'
+  },
   harnesses: [],
   // Model per harness and role. trio and reviewer analyse and plan; executor writes code.
   // A role set to null (or missing) uses the harness's own default model.

@@ -1,6 +1,6 @@
 ---
 name: bokata-tdd
-description: Strict small-step TDD with Kent Beck's four rules of simple design and evidence rules for every commit — one failing test, the minimum code, a separate refactor, one commit per step. Use it to implement a planned step, a bokata slice, or a bug fix test-first; when the user says TDD, red-green-refactor, baby steps or simple design; or when an executor agent loads it as its method.
+description: Strict small-step TDD with an acceptance test per increment and evidence rules for every commit — the scenario as a failing acceptance test, then one failing test, the minimum code, a separate refactor, one commit per step. Use it to implement a planned step, a bokata slice, or a bug fix test-first; when the user says TDD, ATDD, red-green-refactor or baby steps; or when an executor agent loads it as its method.
 ---
 
 # bokata-tdd
@@ -19,8 +19,33 @@ before the next one starts.
    the installed package's types.
 4. Use the project's own commands for tests, lint, type-check, format and build (from
    `AGENTS.md` or the project's manifest). Never invent them.
+5. Load the refactor method: the skill named in `.bokata.json` → `methods.refactor` (default
+   `bokata-refactor`). Steps 0 and 3 of the loop follow it.
+
+## Acceptance test first, once per increment
+
+An increment is done when its scenario passes, not when its last step is committed. Before the
+first step of an increment (acceptance-test-driven development, the outer loop):
+
+1. Write the increment's scenario as **one** test at the highest seam the project's unit test
+   runner reaches cheaply — usually the view model or the component, not an end-to-end spec
+   unless the project asks for one on this flow. Same Given/When/Then, same domain words.
+2. Run it and check it fails for the right reason.
+3. Mark it as an expected failure that turns red the moment it passes — Vitest `it.fails`,
+   Jest `test.failing`, pytest `xfail(strict=True)` — and commit it on its own as `test(...)`,
+   with the failure line in the body. If the runner has no such marker, skip it instead and
+   say so.
+4. Build the increment with the inner loop below, in the project's build order. The step that
+   makes the scenario pass removes the marker **in the same commit**.
+
+If the first step's test already *is* the scenario (a pure domain rule, say), the two loops are
+one: skip this.
 
 ## The loop, once per step
+
+**0. MAKE THE CHANGE EASY.** If the step would land awkwardly — scattered edits, a function
+growing yet another branch — tidy first with the refactor method, in its own `refactor(...)`
+commit, then start the step.
 
 **1. RED.** Write **one** failing test taken from the step's scenario. Run only that test and
 check it fails *for the right reason* — a missing behaviour, not a typo or an import error.
@@ -31,12 +56,11 @@ If it passes at once, the behaviour already exists: keep it as a regression guar
 one test does not force the general case; triangulate with the next test. Write no code that
 no failing test asks for.
 
-**3. REFACTOR.** With everything green, apply Kent Beck's four rules of simple design, in
-priority order — see [resources/simple-design.md](resources/simple-design.md):
-1. passes the tests; 2. reveals intention; 3. no duplication; 4. fewest elements.
+**3. REFACTOR.** With everything green, refactor with the refactor method: Kent Beck's four
+rules of simple design as the arbiter, one behaviour-preserving move at a time.
 
 For a non-trivial step, ask the `design-reviewer` subagent to review the step's diff and apply
-its findings (no subagents available? review the diff yourself against the same checklist).
+its findings (no subagents available? review the diff yourself with the same method).
 A refactor changes structure only: run the tests before and after, and commit it on its own
 as `refactor(...)`, never mixed with `feat`/`fix`.
 
@@ -62,7 +86,7 @@ implemented" without the test and commit that prove it, and record the real gate
 ## Working from a bokata slice
 
 If your input is `slices/<nn>-<name>.md`: check off each plan step **in the same commit** as
-the step, fill the increment's `Tests:` lines (scenario → test), and keep the scope's
+the step, fill the increment's `Tests:` lines (scenario → its acceptance test), and keep the scope's
 `Unknowns` current. Tests are named by behaviour in the domain's words — never by an
 acceptance-criterion ID.
 

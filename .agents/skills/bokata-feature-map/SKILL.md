@@ -15,7 +15,8 @@ Read `.bokata.json` at the project root if it exists. Defaults:
 
 ```json
 { "docs": "docs/initiatives",
-  "memory": { "constitution": "CONSTITUTION.md", "glossary": "CONTEXT.md" },
+  "memory": { "constitution": "CONSTITUTION.md", "glossary": "GLOSSARY.md", "adrs": "docs/adrs" },
+  "methods": { "domain": "domain-modeling" },
   "templates": { "features": null },
   "html": true,
   "story_map": true }
@@ -187,6 +188,23 @@ Instruction: "Skip your own Phase 0 discovery — it has been resolved upstream.
 ```
 
 You receive the functional ACs.
+
+### 4c. Domain Pass (Interactive)
+
+Load the skill named in `methods.domain` (default `domain-modeling`; skip this pass if it is
+`null` or not installed) and run it over the functional ACs you just received, against the
+glossary at `memory.glossary`. Scenarios are where new words slip in, and the trio uses its
+own:
+
+- A term the glossary lists under _Avoid_ → replace it with the canonical term.
+- Two words for one concept, or one word for two → ask the user which (one question, with
+  your recommendation), then use the answer everywhere.
+- A new concept the scenarios need → settle its name with the user and add it to the glossary
+  inline (terms only, no implementation detail).
+- An ADR only at `memory.adrs`, and only when it is hard to reverse, surprising without
+  context, and the result of a real trade-off.
+
+The paths and formats in `.bokata.json` win over the domain skill's own.
 
 ---
 

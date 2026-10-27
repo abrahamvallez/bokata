@@ -18,10 +18,10 @@ Read `.bokata.json` at the project root if it exists. Defaults:
 
 ```json
 { "docs": "docs/initiatives",
-  "memory": { "constitution": "CONSTITUTION.md", "glossary": "CONTEXT.md",
+  "memory": { "constitution": "CONSTITUTION.md", "glossary": "GLOSSARY.md",
               "adrs": "docs/adrs", "adr_template": null },
   "templates": { "pitch": null },
-  "methods": { "grill": "grill-with-docs" } }
+  "methods": { "grill": "grill-with-docs", "domain": "domain-modeling" } }
 ```
 
 A memory file that does not exist is skipped, never created empty. `templates.pitch: null`
@@ -36,7 +36,10 @@ means [resources/pitch-template.md](resources/pitch-template.md).
 ## 1. Narrow the problem (grill)
 
 Load the skill named in `methods.grill` (default `grill-with-docs`; fall back to `grill-me`,
-or to the rules below if neither is installed) and follow it, with these bokata rules on top:
+or to the rules below if neither is installed) and follow it. Load the skill named in
+`methods.domain` too (default `domain-modeling`; skip it if it is `null`, not installed, or
+already loaded by the grill skill): it challenges terms against the glossary and writes the
+glossary and ADRs as they settle. Apply these bokata rules on top:
 
 - One question at a time, each with your recommended answer.
 - Facts come from the code: explore it (use a read-only explore subagent if your harness has
@@ -44,7 +47,8 @@ or to the rules below if neither is installed) and follow it, with these bokata 
 - Keep coming back to the Shape Up question: **"what is the specific situation where the
   current way fails?"** Design for that case, not for an abstraction.
 - Glossary terms and ADRs are written **inline, when they settle**, at the paths in `memory`.
-  If the grill skill wants other paths (for example `docs/adr/`), use the configured ones.
+  If the grill or domain skill wants other paths or formats (for example `docs/adr/` with
+  numbered ADRs), use the configured ones.
   Use `memory.adr_template` if set, otherwise [resources/adr-template.md](resources/adr-template.md).
 - Offer an ADR only when all three hold: hard to reverse, surprising without context, and the
   result of a real trade-off.

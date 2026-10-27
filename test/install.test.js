@@ -86,6 +86,25 @@ test('generates the executor for each harness with the configured code method an
   assert.ok(!read(dir, '.claude', 'agents', 'code-executor.md').includes('{{'));
 });
 
+test('the design reviewer loads the configured refactor method', () => {
+  const dir = project((d) => {
+    fs.writeFileSync(path.join(d, '.bokata.json'), JSON.stringify({ methods: { refactor: 'my-refactoring' } }));
+  });
+  bokata(dir, 'install', '--claude', '--opencode', '--yes');
+
+  assert.match(read(dir, '.claude', 'agents', 'design-reviewer.md'), /^skills:\n {2}- my-refactoring$/m);
+  assert.match(read(dir, '.opencode', 'agents', 'design-reviewer.md'), /First, load the skill `my-refactoring`/);
+  assert.ok(!read(dir, '.claude', 'agents', 'design-reviewer.md').includes('{{'));
+});
+
+test('warns about a method slot whose skill is not installed', () => {
+  const dir = project();
+  const output = bokata(dir, 'install', '--claude', '--yes');
+
+  assert.match(output, /methods\.domain is "domain-modeling" but no skill with that name is installed/);
+  assert.doesNotMatch(output, /methods\.refactor is/, 'bokata ships its own refactor method');
+});
+
 test('read-only agents cannot edit', () => {
   const dir = project();
   bokata(dir, 'install', '--claude', '--opencode', '--codex', '--yes');

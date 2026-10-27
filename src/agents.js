@@ -5,7 +5,8 @@
 //   role    trio | executor | reviewer   → picks the model from config.models[harness][role]
 //   mode    subagent | all               → opencode mode (all = usable as primary and subagent)
 //   access  read | write
-//   skills  JSON array; "{{methods.code}}" is replaced from config.methods.code
+//   skills  JSON array
+// Anywhere in the file, "{{methods.<slot>}}" is replaced with config.methods.<slot>.
 
 const READ_TOOLS = 'Read, Grep, Glob, Bash';
 const FORBIDDEN_GIT = ['git push*', 'git merge*', 'git rebase*', 'git stash*', 'git commit --amend*'];
@@ -24,7 +25,11 @@ function parseAgent(source) {
 }
 
 function resolveAgent(source, config) {
-  const filled = source.replace(/\{\{methods\.code\}\}/g, config.methods.code);
+  const filled = source.replace(/\{\{methods\.(\w+)\}\}/g, (_, slot) => {
+    const skill = config.methods[slot];
+    if (!skill) throw new Error(`methods.${slot} is not set in .bokata.json`);
+    return skill;
+  });
   return parseAgent(filled);
 }
 

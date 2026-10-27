@@ -12,6 +12,7 @@ const SKILLS = [
   'bokata-slice',
   'bokata-plan',
   'bokata-tdd',
+  'bokata-refactor',
   'bokata-status',
   'bokata-feature-mapper',
   'bokata-feature-slicer',
@@ -231,17 +232,21 @@ function printSummary(config, activeKeys) {
   console.log('  bokata-feature-map   features + functional ACs (large initiatives)');
   console.log('  bokata-slice         cut a vertical slice from 1-3 features');
   console.log('  bokata-plan          write the plan into the slice, inside your plan mode');
-  console.log(`  ${config.methods.code.padEnd(20)} code method used by the code-executor agent`);
   console.log('  bokata-status        where an initiative stands');
   console.log('');
-  const grillDirs = [['.agents', 'skills'], ['.claude', 'skills'], ['.opencode', 'skills']];
-  const grillFound = grillDirs.some((parts) =>
-    fs.existsSync(path.join(process.cwd(), ...parts, config.methods.grill))
-  );
-  if (!grillFound) {
-    console.log(`⚠ methods.grill is "${config.methods.grill}" but no skill with that name is installed.`);
-    console.log('  Install it (e.g. from mattpocock/skills) or change methods.grill in .bokata.json.');
-    console.log('');
+  console.log('Methods (.bokata.json → methods; name another skill to swap one):');
+  for (const [slot, skill] of Object.entries(config.methods)) {
+    console.log(`  ${slot.padEnd(9)} ${skill || '(none)'}`);
+  }
+  console.log('');
+  const skillDirs = [['.agents', 'skills'], ['.claude', 'skills'], ['.opencode', 'skills']];
+  for (const [slot, skill] of Object.entries(config.methods)) {
+    if (!skill) continue;
+    const found = skillDirs.some((parts) => fs.existsSync(path.join(process.cwd(), ...parts, skill)));
+    if (!found) {
+      console.log(`⚠ methods.${slot} is "${skill}" but no skill with that name is installed.`);
+      console.log(`  Install it (e.g. from mattpocock/skills) or change methods.${slot} in .bokata.json.`);
+    }
   }
 }
 

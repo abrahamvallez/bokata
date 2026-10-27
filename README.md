@@ -15,8 +15,8 @@ pitch     features        slice     checklist  commits
   behaviour, and the ADRs record the *why*.
 - **Product Trio** (PM, Designer, Engineer) subagents review approaches, features and slices
   in parallel; you coordinate and decide.
-- **Agnostic.** Output folder, templates, the grill method and the code method are set in
-  `.bokata.json`. Orchestration (Orca, tmux, plain terminals) stays yours.
+- **Agnostic.** Output folder, templates and the method skills (grill, domain, code,
+  refactor) are set in `.bokata.json`. Orchestration (Orca, tmux, plain terminals) stays yours.
 
 ## Install
 
@@ -34,8 +34,10 @@ npx bokata@latest sync             # regenerate agents after editing .bokata.jso
   in `.bokata.json`; change it there and run `sync`.
 - Re-running `install` is safe. It also removes the commands bokata 2.x installed. (2.x also
   wrote `~/.codex/prompts/bokata-*.md` globally; delete those by hand if you used Codex.)
-- The default grill method is [`grill-with-docs`](https://github.com/mattpocock/skills) by
-  Matt Pocock. Install it with its own installer, or point `methods.grill` elsewhere.
+- The default grill and domain methods are [`grill-with-docs` and
+  `domain-modeling`](https://github.com/mattpocock/skills) by Matt Pocock. Install them with
+  their own installer, or point `methods.grill` / `methods.domain` elsewhere (see
+  [Methods](#methods)).
 
 ## The flow
 
@@ -55,7 +57,8 @@ npx bokata@latest sync             # regenerate agents after editing .bokata.jso
 | `bokata-feature-map` | Features Backbone + functional ACs with the trio; asks only about gaps in its input | `features.md` (+ `.html`, `story-map.html`) |
 | `bokata-slice` | Pick 1–3 features → increment options → you choose the slice (walking skeleton first) → concrete ACs for the chosen increments only | `slices/<nn>-<name>.md` (+ `.html`) |
 | `bokata-plan` | A contract for your harness's own plan mode: the plan becomes checklists under each increment | the slice's `Plan:` |
-| `bokata-tdd` | Default code method: strict small-step TDD, Kent Beck's simple design, evidence rules | commits |
+| `bokata-tdd` | Default code method: an acceptance test per increment, then strict small-step TDD with evidence rules | commits |
+| `bokata-refactor` | Default refactor method: Kent Beck's four rules of simple design, tidyings, code smells mapped to the move that fixes each | `refactor` commits |
 | `bokata-status` | Read-only: phase, active slice, next step, open unknowns, features not yet sliced | — |
 | `bokata-feature-mapper`, `bokata-feature-slicer`, `bokata-acceptance-criteria` | The methods the phases use; usable on their own | — |
 
@@ -65,7 +68,7 @@ npx bokata@latest sync             # regenerate agents after editing .bokata.jso
 |---|---|---|
 | `bokata-product-manager` / `-designer` / `-engineer` | Product Trio reviewers and rule contributors | read |
 | `code-executor` | Builds a planned slice with `methods.code`; keeps the slice checklist, test mapping and unknowns current; never pushes | write |
-| `design-reviewer` | Reviews one step's diff against the four rules of simple design | read |
+| `design-reviewer` | Reviews one step's diff with `methods.refactor` and the coding standards | read |
 
 During trio reviews the **main thread** is the neutral coordinator: it applies
 non-conflicting findings, settles factual conflicts against the artifacts, and escalates
@@ -111,17 +114,48 @@ Everything is optional; these are the defaults.
   "story_map": true,                   // Patton story map for feature maps
   "memory": {                          // long-lived files bokata reads (and shape updates)
     "constitution": "CONSTITUTION.md",
-    "glossary": "CONTEXT.md",
+    "glossary": "GLOSSARY.md",
     "standards": "CODING_STANDARDS.md",
     "adrs": "docs/adrs",
     "adr_template": null               // null = bokata's light MADR template
   },
   "templates": { "pitch": null, "features": null, "slice": null },  // your own templates
-  "methods": { "grill": "grill-with-docs", "code": "bokata-tdd" },  // swap a method skill
+  "methods": {                         // swap a method skill (see Methods)
+    "grill": "grill-with-docs",
+    "domain": "domain-modeling",
+    "code": "bokata-tdd",
+    "refactor": "bokata-refactor"
+  },
   "harnesses": [],                     // filled by install
   "models": { … }                      // per harness: trio | reviewer | executor (see below)
 }
 ```
+
+### Methods
+
+Bokata decides **what** each phase produces and **where** it goes; a method skill decides
+**how** one job is done. Each slot names a skill, and you swap one by naming another skill in
+`.bokata.json` (then `npx bokata sync` so the agents pick it up).
+
+| Slot | Default | Loaded by | The job |
+|---|---|---|---|
+| `grill` | `grill-with-docs` | `bokata-shape` | Interview the user until the problem is narrow |
+| `domain` | `domain-modeling` | `bokata-shape`, `bokata-feature-map`, `bokata-slice` | Challenge terms against the glossary; write glossary terms and ADRs as they settle |
+| `code` | `bokata-tdd` | `code-executor` | Turn plan steps into tested commits |
+| `refactor` | `bokata-refactor` | `bokata-tdd`, `design-reviewer` | Change structure without changing behaviour, and name what to change |
+
+A replacement only has to do the slot's job. Bokata layers its own rules on top, and they win
+over the method's:
+
+- **Paths and formats come from `memory`.** If a method writes `GLOSSARY.md` or numbered
+  `docs/adr/` files and your config says otherwise, the config wins.
+- **The output contract stays bokata's.** Whatever the code method, the executor checks off
+  plan steps commit by commit, fills `Tests:` and keeps `Unknowns` honest.
+- **The project wins over every method.** The constitution, `AGENTS.md` and the coding
+  standards are read first and override any method.
+
+Set `domain` to `null` to skip the domain passes. Project-specific coding rules do not need a
+slot: they live in `memory.standards`, which the executor and the reviewer always read.
 
 ### Default models
 
