@@ -49,7 +49,7 @@ Accept either:
 
 Instead of each skill asking its own Phase 0 questions, consolidate once here.
 
-Ask clarifying questions that would affect **Feature scope, actors, flows, or business constraints** — merge the categories from:
+Ask clarifying questions in **rounds** (every question you can ask now, numbered, each with your recommended answer and worded so "yes" accepts it; wait for the answers before the next round) that would affect **Feature scope, actors, flows, or business constraints** — merge the categories from:
 - `bokata-feature-mapper`'s categories: Scope, Actors, Flows, Constraints
 - Later AC phases: Business rules that affect Feature framing (e.g., "must curator-verify stories before public visibility" — is that a Feature boundary or an internal rule?)
 
@@ -197,12 +197,15 @@ glossary at `memory.glossary`. Scenarios are where new words slip in, and the tr
 own:
 
 - A term the glossary lists under _Avoid_ → replace it with the canonical term.
-- Two words for one concept, or one word for two → ask the user which (one question, with
-  your recommendation), then use the answer everywhere.
+- Two words for one concept, or one word for two → ask the user which, then use the answer
+  everywhere.
 - A new concept the scenarios need → settle its name with the user and add it to the glossary
   inline (terms only, no implementation detail).
 - An ADR only at `memory.adrs`, and only when it is hard to reverse, surprising without
   context, and the result of a real trade-off.
+
+Ask every naming question of the pass in one round, numbered, each with your recommended
+answer.
 
 The paths and formats in `.bokata.json` win over the domain skill's own.
 

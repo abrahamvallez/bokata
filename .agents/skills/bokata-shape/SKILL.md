@@ -35,13 +35,15 @@ means [resources/pitch-template.md](resources/pitch-template.md).
 
 ## 1. Narrow the problem (grill)
 
-Load the skill named in `methods.grill` (default `grill-with-docs`; fall back to `grill-me`,
+Load the skill named in `methods.grill` (default `grill-with-docs`; fall back to `grilling`,
 or to the rules below if neither is installed) and follow it. Load the skill named in
 `methods.domain` too (default `domain-modeling`; skip it if it is `null`, not installed, or
 already loaded by the grill skill): it challenges terms against the glossary and writes the
 glossary and ADRs as they settle. Apply these bokata rules on top:
 
-- One question at a time, each with your recommended answer.
+- Ask in **rounds**: every question you can ask now, numbered, each with your recommended
+  answer and worded so "yes" accepts it. Wait for the answers before the next round; a
+  question that depends on one still open waits for a later round.
 - Facts come from the code: explore it (use a read-only explore subagent if your harness has
   one) instead of asking the user what the code already says. Decisions belong to the user.
 - Keep coming back to the Shape Up question: **"what is the specific situation where the
