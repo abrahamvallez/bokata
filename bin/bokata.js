@@ -1,17 +1,27 @@
 #!/usr/bin/env node
 
-const { runInstall } = require('../src/install');
+const { runInstall, runSync } = require('../src/install');
 
 const args = process.argv.slice(2);
 const [command, ...rest] = args;
 
 async function main() {
-  if (!command || command === 'install') {
-    await runInstall(command === 'install' ? rest : args);
+  if (!command || (command.startsWith('-') && !['-h', '--help'].includes(command))) {
+    await runInstall(args);
     return;
   }
 
-  if (command === '--help' || command === '-h') {
+  if (command === 'install') {
+    await runInstall(rest);
+    return;
+  }
+
+  if (command === 'sync') {
+    await runSync();
+    return;
+  }
+
+  if (command === '--help' || command === '-h' || command === 'help') {
     printHelp();
     return;
   }
@@ -23,10 +33,11 @@ async function main() {
 
 function printHelp() {
   console.log(`
-Bokata — Product Trio SDD framework installer
+Bokata — skills and agents for shaping, slicing and building in small steps
 
 Usage:
-  npx bokata@latest install [options]
+  npx bokata@latest install [options]   install or update skills, agents and .bokata.json
+  npx bokata@latest sync                regenerate agents from .bokata.json (no questions)
 
 Options:
   --claude       Install for Claude Code
@@ -36,16 +47,20 @@ Options:
   --yes, -y      Non-interactive: never prompt, only install what was detected/flagged
 
 Behavior:
-  With no harness flags, bokata auto-detects .claude/, .cursor/, .opencode/,
-  and .codex/ in the current directory and installs into whichever exist.
-  If none are found and --yes was not passed, it asks interactively.
+  With no harness flags, bokata auto-detects .claude/, .cursor/, .opencode/ (or
+  opencode.json) and .codex/ in the current directory and installs into whichever
+  exist. If none are found and --yes was not passed, it asks interactively.
 
-  Re-running "install" is safe — it overwrites previously installed files
-  so you can pick up updates.
+  Skills go to .agents/skills/ (symlinked from .claude/skills/ and .cursor/skills/).
+  Agents are generated per harness; the model of each role (trio, executor,
+  reviewer) is asked at install time and stored in .bokata.json.
+
+  Re-running "install" is safe — it overwrites what bokata installed and removes
+  the commands bokata 2.x used to install.
 `);
 }
 
 main().catch((err) => {
-  console.error(`✖ Install failed: ${err.message}`);
+  console.error(`✖ ${err.message}`);
   process.exitCode = 1;
 });
