@@ -4,7 +4,9 @@
 
 <!-- The backbone uses bokata-feature-mapper's output format unchanged; each User Task carries
      its functional ACs (bokata-acceptance-criteria --functional) right below it, and each
-     Feature ends with an "Increment options" section that bokata-slice fills. -->
+     Feature ends with an "Increment options" section that bokata-slice fills.
+     Single mode (bokata-slice from a pitch) writes `<!-- Mode: single -->` and keeps only the
+     one Feature's header, Purpose, User Task names and Increment options. -->
 
 ## Features Backbone
 
