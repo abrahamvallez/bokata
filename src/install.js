@@ -14,6 +14,7 @@ const SKILLS = [
   'bokata-tdd',
   'bokata-refactor',
   'bokata-status',
+  'bokata-render',
   'bokata-feature-mapper',
   'bokata-feature-slicer',
   'bokata-acceptance-criteria'
@@ -24,10 +25,11 @@ const AGENTS = [
   'bokata-product-designer',
   'bokata-product-engineer',
   'code-executor',
-  'design-reviewer'
+  'design-reviewer',
+  'story-map-renderer'
 ];
 
-const ROLES = ['trio', 'executor', 'reviewer'];
+const ROLES = ['trio', 'executor', 'reviewer', 'render'];
 
 const HARNESS_KEYS = ['claude', 'cursor', 'opencode', 'codex'];
 

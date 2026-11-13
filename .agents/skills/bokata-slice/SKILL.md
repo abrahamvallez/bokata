@@ -1,6 +1,6 @@
 ---
 name: bokata-slice
-description: Cut one vertical slice from 1-3 Features the user picks — decompose those Features into Increment options with the Product Trio (Walking Skeleton first), let the user choose which increments enter the slice, write concrete-depth Acceptance Criteria only for those, and write slices/<nn>-<name>.md (plus .html) with its scopes and checklist. Use it after bokata-feature-map or a pitch, when the user wants to slice, pick what to build next, or define a walking skeleton or release slice.
+description: Cut one vertical slice from 1-3 Features the user picks — decompose those Features into Increment options with the Product Trio (Walking Skeleton first), let the user choose which increments enter the slice, write concrete-depth Acceptance Criteria only for those, and write slices/<nn>-<name>.md with its scopes and checklist. Use it after bokata-feature-map or a pitch, when the user wants to slice, pick what to build next, or define a walking skeleton or release slice.
 ---
 
 Cut a **vertical slice** from 1–3 Features of an existing Features Backbone: decompose those Features into a **Walking Skeleton + Increment options**, let the user choose which increments form the slice, and write **concrete-depth Acceptance Criteria** for the chosen increments only — using the **Product Trio**, with you as the neutral coordinator and PM, Designer, and Engineer reviewing from their lenses.
@@ -25,16 +25,15 @@ Read `.bokata.json` at the project root if it exists. Defaults:
   "memory": { "constitution": "CONSTITUTION.md", "glossary": "GLOSSARY.md", "adrs": "docs/adrs" },
   "methods": { "domain": "domain-modeling" },
   "templates": { "slice": null },
-  "html": true,
   "story_map": true }
 ```
 
-`<docs>` below is the `docs` value. `templates.slice: null` means [resources/slice-template.md](resources/slice-template.md). HTML rendering uses `bokata-feature-map`'s [html-template.md](../bokata-feature-map/resources/html-template.md) and [story-map-template.md](../bokata-feature-map/resources/story-map-template.md).
+`<docs>` below is the `docs` value. `templates.slice: null` means [resources/slice-template.md](resources/slice-template.md). The story map is rendered by the `bokata-render` skill from `bokata-render`'s [story-map-template.md](../bokata-render/resources/story-map-template.md); this skill only dispatches it.
 
 ## Mode
 
-- **Trio mode (large initiative)** — `<docs>/<initiative-slug>/features.md` exists. Reviews and Rules come from the three trio subagents, as below.
-- **Single mode (one feature)** — there is only a pitch (or a plain description). The pitch is the one Feature. Run every trio step yourself, one lens at a time, without subagents, and skip `features.md` updates.
+- **Trio mode (large initiative)** — `<docs>/<initiative-slug>/features.md` exists and was written by `bokata-feature-map` (no `<!-- Mode: single -->` marker). Reviews and Rules come from the three trio subagents, as below.
+- **Single mode (one feature)** — there is only a pitch (or a plain description), or a `features.md` carrying `<!-- Mode: single -->`. The pitch is the one Feature. Run every trio step yourself, one lens at a time, without subagents. `features.md` still holds the Feature's Increment options, so later slices are picked from what is left: the first time, create it from the features template with **only** the one Feature (name and `Purpose` from the pitch, its User Task names from the slicer) and its `##### Increment options` — no functional ACs, dependencies or compliance checklist — and put `<!-- Mode: single -->` under its header comment. Later single-mode slices read and mark it exactly as trio mode does.
 
 The user can force either mode.
 
@@ -44,14 +43,14 @@ The user can force either mode.
 
 Accept either:
 1. **1–3 Feature names + existing initiative** (infer from `<docs>/<initiative-slug>/features.md`)
-2. **A pitch** (`<docs>/<initiative-slug>/pitch.md`) — single mode
+2. **A pitch** (`<docs>/<initiative-slug>/pitch.md`) — single mode (plus the single-mode `features.md`, if an earlier slice wrote it)
 3. **Just the initiative** (show its Features and ask the user to pick)
 
 ---
 
 ## Step 1: Resolve Features & Folders
 
-1. Read `features.md` (or the pitch), the constitution, the glossary, and the slices that already exist in `<docs>/<initiative-slug>/slices/`.
+1. Read `features.md` and the pitch (in single mode, the pitch alone until the first slice writes `features.md`), the constitution, the glossary, and the slices that already exist in `<docs>/<initiative-slug>/slices/`.
 2. Show the Features with what each existing slice already took, and ask the user to pick **1–3 Features that make sense together** if not provided via argument. For the first slice, recommend the group that makes the journey usable end to end.
 3. Create folder: `<docs>/<initiative-slug>/slices/` (use `mkdir -p` via Bash)
 4. Proceed with confirmed Features in subsequent steps
@@ -149,7 +148,7 @@ You act as the **neutral coordinator** — you do not add a fourth opinion and y
 
 ### 3d. Store the Increment Options
 
-Write each reconciled Feature's options into its `##### Increment options` section in `features.md`, one line each, describing what the user can do or see (never endpoints, fields or function names):
+Write each reconciled Feature's options into its `##### Increment options` section in `features.md` (in single mode, create it first the way **Mode** says), one line each, describing what the user can do or see (never endpoints, fields or function names):
 ```
 - [skeleton] {FEAT}-a: [Walking Skeleton item] **[User Task Name]**
 - {FEAT}-b: [Increment] **[User Task Name]**
@@ -248,55 +247,30 @@ The paths and formats in `.bokata.json` win over the domain skill's own.
 
 ---
 
-## Step 5: Write the Slice & Render HTML
+## Step 5: Write the Slice & Update the Backlog
 
 1. Number the slice (`01`, `02`, … after the existing ones) and **write** `<docs>/<initiative-slug>/slices/<nn>-<name>.md` from the slice template: the header, one `## Scope:` per picked Feature, and under each scope its chosen increments (must-have / `~`) with their concrete Gherkin ACs, an empty `Plan:` (filled by `bokata-plan`) and an empty `Tests:` (filled by the executor). Add `## Trio Reconciliation Notes`.
 
-2. **Render & Write** `<docs>/<initiative-slug>/slices/<nn>-<name>.html` (if `html` is true):
-   - Using the `html-template.md` conversion rules (markdown → semantic HTML)
-   - Build title: `"Slice <nn> — <name>"`
-   - Build subtitle: `"Trio-Reviewed Vertical Slice"`
-   - Convert Walking Skeleton items and Increments per the template's table (`.skeleton-item`, `.increment-item`), and the Gherkin per its `.requirement`, `.scenario` rules
-   - Footer: `"Slice <nn> — <name> | Generated [DATE] | Skill: bokata-slice | Source: features.md [Features]"`
+2. In `features.md`, append `→ <nn>-<name>` to every option this slice took, so the backlog of what is left stays readable.
 
-3. In `features.md`, append `→ <nn>-<name>` to every option this slice took.
-
----
-
-## Step 6: Update Story Map
-
-If `<docs>/<initiative-slug>/story-map.html` exists:
-
-1. **Read** it (created by `bokata-feature-map`)
-
-2. **The addressable unit is the User Task (Step) column, not the Feature** — per `story-map-template.md`. Do NOT locate a single `.map-column[data-feature-id]` and swap one shared block; a Feature's Steps are updated individually, one column at a time.
-
-3. **Use the `**[User Task Name]**` tags** of the chosen increments to group them by which User Task they belong to. Not every User Task in the picked Features will necessarily have a chosen increment — that's expected; a slice commonly touches only some Steps.
-
-4. **For each tagged User Task**, locate its column: `querySelector('.step-card[data-task-id="{{TASK_ID}}"]')`, resolve its absolute grid-column position, and replace that Step's `.release-cell` placeholder (or append below the cards already there) with:
-   - A `.skeleton-item-card` for its Walking Skeleton item, if any
-   - `.increment-card` divs stacked below it for its Increments
-   - Label each card with the slice name, so every slice reads as one release row
-
-5. **Leave every other Step's column untouched** — including Steps this slice didn't tag, and every card from earlier slices
-
-6. **Update footer** to show current slicing progress:
-   - `"{{INITIATIVE_NAME}} Story Mapping | Generated [DATE] | Features: {{NUM_FEATURES}} | Steps: {{NUM_TASKS}} | Sliced: {{SLICED_COUNT}}/{{NUM_FEATURES}} | Slices: {{NUM_SLICES}} | Skills: bokata-feature-map → bokata-slice"`
-
-7. **Write** back to `<docs>/<initiative-slug>/story-map.html` (same filename)
+3. **Dispatch the story-map update** (if `story_map`): dispatch the `story-map-renderer` subagent (it loads the `bokata-render` skill) — operation `slice-added` when `story-map.html` exists, otherwise `rebuild` so the new board includes this slice from the start — passing `<docs>/<initiative-slug>/` and the slice path. It runs on its own cheap model role (`models.<harness>.render`) in background — do not render the HTML yourself and do not wait for it:
+   ```
+   subagent → story-map-renderer (bokata-render)
+   input: <docs>/<initiative-slug>/ — operation: slice-added — slice: slices/<nn>-<name>.md
+   ```
+   The skill updates the existing board in place (only the tagged Step columns) and then syncs statuses, counters and the next banner. **The addressable unit is the User Task (Step) column, not the Feature** — that rule lives in the render skill and its template; do not re-implement it here.
 
 ---
 
-## Step 7: Verification Gate (No New Rendering Here)
+## Step 6: Verification Gate (No New Rendering Here)
 
 - [ ] `<docs>/<initiative-slug>/slices/<nn>-<name>.md` exists and is final
-- [ ] `<docs>/<initiative-slug>/slices/<nn>-<name>.html` exists (if `html`)
 - [ ] `features.md` has the Increment options of every picked Feature, and the ones this slice took are marked
-- [ ] `story-map.html` was updated (not recreated) with this slice's cards (if it exists)
+- [ ] The `bokata-render` subagent was dispatched with operation `slice-added` (or `rebuild` when the board did not exist yet) if `story_map`
 
 ---
 
-## Step 8: Summary & Next Steps (Main Thread)
+## Step 7: Summary & Next Steps (Main Thread)
 
 Print to user:
 ```
@@ -332,6 +306,6 @@ Print to user:
 - [ ] Concrete ACs exist only for the chosen increments, grouped by increment (not by whole Feature)
 - [ ] Concrete AC uses full Gherkin Given/When/Then for every scenario
 - [ ] All Gherkin has concrete example data (not abstract placeholders)
-- [ ] Every `.html` was rendered and written immediately after its `.md` was finalized (not deferred to a final batch step)
-- [ ] `story-map.html` update touched only the tagged Step columns — every other Step column and all cards from earlier slices were left untouched
+- [ ] The `bokata-render` subagent was dispatched with operation `slice-added` immediately after the slice was final (not deferred to a final batch step)
+- [ ] The render updates only the tagged Step columns — every other Step column and all cards from earlier slices stay untouched
 - [ ] All parallel subagent fan-outs were issued together and completed before reconciliation began

@@ -33,6 +33,11 @@ contract below, whatever the method.
 - **Never push, merge, stash, amend or rebase.** Stage explicit paths only.
 - **Never launch another harness or agent CLI** (`opencode`, `claude`, `codex`…) — only the
   subagents your method asks for, such as `design-reviewer`.
+- **Keep the story map current.** At the end of each increment, and again when the slice closes
+  (`Status: done`), dispatch the `story-map-renderer` subagent (it loads the `bokata-render`
+  skill) with operation `state-sync`. Never per commit and never mid-step. Skip it if
+  `story_map` is `false`. This is harness bookkeeping, not part of the code method: the
+  renderer reads the slice and updates `story-map.html`; you keep writing code.
 - When every must-have of the slice is checked, set the slice `Status: done` and report:
   commits, deviations (also written under `Notes`), open `~` items, and checks still pending.
 

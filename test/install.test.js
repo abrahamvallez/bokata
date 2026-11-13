@@ -31,7 +31,7 @@ test('every listed skill and agent exists in the package', () => {
   for (const agent of AGENTS) {
     const { meta } = parseAgent(read(ROOT, 'agents', `${agent}.md`));
     assert.strictEqual(meta.name, agent);
-    assert.ok(['trio', 'executor', 'reviewer'].includes(meta.role), `${agent} role`);
+    assert.ok(['trio', 'executor', 'reviewer', 'render'].includes(meta.role), `${agent} role`);
   }
 });
 

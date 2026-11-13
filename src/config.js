@@ -6,7 +6,6 @@ const CONFIG_FILE = '.bokata.json';
 const DEFAULTS = {
   docs: 'docs/initiatives',
   language: 'auto',
-  html: true,
   story_map: true,
   memory: {
     constitution: 'CONSTITUTION.md',
@@ -27,14 +26,15 @@ const DEFAULTS = {
   // Model per harness and role. trio and reviewer analyse and plan; executor writes code.
   // A role set to null (or missing) uses the harness's own default model.
   models: {
-    claude: { trio: 'opus', reviewer: 'opus', executor: 'sonnet' },
+    claude: { trio: 'opus', reviewer: 'opus', executor: 'sonnet', render: 'haiku' },
     opencode: {
       trio: 'opencode-go/glm-5.3-flash',
       reviewer: 'opencode-go/glm-5.3-flash',
-      executor: 'opencode-go/deepseek-v4.1-flash'
+      executor: 'opencode-go/deepseek-v4.1-flash',
+      render: 'opencode-go/glm-5.3-flash'
     },
-    cursor: { trio: 'glm-flash', reviewer: 'glm-flash', executor: 'sonnet' },
-    codex: { trio: 'gpt-5.6-sol', reviewer: 'gpt-5.6-sol', executor: 'gpt-5.6-luna' }
+    cursor: { trio: 'glm-flash', reviewer: 'glm-flash', executor: 'sonnet', render: 'glm-flash' },
+    codex: { trio: 'gpt-5.6-sol', reviewer: 'gpt-5.6-sol', executor: 'gpt-5.6-luna', render: 'gpt-5.6-luna' }
   }
 };
 

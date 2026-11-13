@@ -67,7 +67,15 @@ Set the slice `Status: planned`.
 If your plan mode does not let you edit files, present the plan for approval first and write
 it into the slice right after the user approves.
 
-## 4. Hand-off
+## 4. Sync the story map
+
+After the plan is written, dispatch the `story-map-renderer` subagent (it loads the
+`bokata-render` skill) with operation `state-sync`: the increments of this slice move to
+`planned` and the next banner starts pointing at the first unchecked step. It runs on its own
+cheap model role (`models.<harness>.render`) in background. Do not render the HTML here and do
+not wait for it. Skip this if `story_map` is `false`.
+
+## 5. Hand-off
 
 End with the exact line the user can hand to an executor (by hand, or through an
 orchestrator such as Orca):

@@ -1,6 +1,6 @@
 ---
 name: bokata-feature-map
-description: Generate a Features Backbone and Functional Acceptance Criteria using the Product Trio (PM, Designer, Engineer), written as one features.md (plus .html and a Patton story map) under the initiative folder. Accepts any input — a bokata pitch, a PRD, notes — and only asks about the gaps it leaves. Use it when the user wants a feature map, a backbone, a story map, or to break a large initiative into features.
+description: Generate a Features Backbone and Functional Acceptance Criteria using the Product Trio (PM, Designer, Engineer), written as one features.md plus the initiative's story-map.html dashboard under the initiative folder. Accepts any input — a bokata pitch, a PRD, notes — and only asks about the gaps it leaves. Use it when the user wants a feature map, a backbone, a story map, or to break a large initiative into features.
 ---
 
 Generate a Features Backbone (User Story Mapping) and Functional-Level Acceptance Criteria using the **Product Trio** — you act as the neutral coordinator, with PM, Designer, and Engineer reviewing from their lenses.
@@ -18,11 +18,10 @@ Read `.bokata.json` at the project root if it exists. Defaults:
   "memory": { "constitution": "CONSTITUTION.md", "glossary": "GLOSSARY.md", "adrs": "docs/adrs" },
   "methods": { "domain": "domain-modeling" },
   "templates": { "features": null },
-  "html": true,
   "story_map": true }
 ```
 
-`<docs>` below is the `docs` value. `templates.features: null` means [resources/features-template.md](resources/features-template.md). `html: false` skips the `.html` renders; `story_map: false` skips `story-map.html`. The `constitution` is the file at `memory.constitution`; use the glossary's terms in every name.
+`<docs>` below is the `docs` value. `templates.features: null` means [resources/features-template.md](resources/features-template.md). `story_map: false` skips `story-map.html`; the markdown is always written. The `constitution` is the file at `memory.constitution`; use the glossary's terms in every name.
 
 ---
 
@@ -211,38 +210,27 @@ The paths and formats in `.bokata.json` win over the domain skill's own.
 
 ---
 
-## Step 5: Write features.md & Render HTML
+## Step 5: Write features.md & Render the Story Map
 
 One file holds the backbone and its functional ACs, so a slice can be chosen from a single place:
 
 1. **Write** `<docs>/<initiative-slug>/features.md` from the features template: the final reconciled backbone, the functional ACs of each User Task placed **under that User Task**, an empty `### Increment options` section per Feature (filled later by `bokata-slice`), and `## Trio Reconciliation Notes`.
 
-2. **Render & Write** `<docs>/<initiative-slug>/features.html` (if `html` is true):
-   - Using the [html-template.md](resources/html-template.md) conversion rules (markdown → semantic HTML)
-   - Build title: `"{{INITIATIVE_NAME}} — Features"`
-   - Build subtitle: `"User Story Mapping + Functional ACs, Trio-Reviewed"`
-   - Convert Features, User Tasks, System Tasks, Requirements and Scenarios per the template's table
-   - Footer: `"{{INITIATIVE_NAME}} Features | Generated [DATE] | Skill: bokata-feature-map | Source: [input description]"`
-
-3. **Create & Render** `<docs>/<initiative-slug>/story-map.html` (if `story_map` is true):
-   - Using the [story-map-template.md](resources/story-map-template.md) — **the addressable/column unit is the User Task (Step), not the Feature.** Do not build a `.map-column` per Feature with tasks listed inside it; that structure is wrong (see the template file's own warning about this).
-   - Build title: `"{{INITIATIVE_NAME}} — Story Mapping"`
-   - Build subtitle: `"Backbone (Features) → Steps (User Tasks) → Releases (Slices)"`
-   - Row 1: render each Feature as a `.feature-header` spanning its own User Task count (`grid-column: span N`), ordered by backbone journey — this is a header only, it holds no cards
-   - Row 2: render each User Task as its own `.step-card` column (`data-task-id="{{TASK_ID}}"`), in the same order as listed under its parent Feature
-   - Row 3: give every Step column exactly one `.release-cell` placeholder ("Not yet sliced") — one per User Task, not one per Feature
-   - Set `{{TOTAL_STEP_COUNT}}` = total User Tasks across all Features (the grid's column count)
-   - Footer: `"{{INITIATIVE_NAME}} Story Mapping | Generated [DATE] | Skill: bokata-feature-map | Features: {{NUM_FEATURES}} | Steps: {{NUM_TASKS}} | Sliced: 0/{{NUM_FEATURES}}"`
+2. **Dispatch the story-map render** (if `story_map` is true): after `features.md` is final, dispatch the `story-map-renderer` subagent (it loads the `bokata-render` skill), operation `create`, passing `<docs>/<initiative-slug>/`. It runs on its own cheap model role (`models.<harness>.render`) in background — rendering is mechanical and must not block the summary. Do not render the HTML yourself and do not wait for the subagent to finish:
+   ```
+   subagent → story-map-renderer (bokata-render)
+   input: <docs>/<initiative-slug>/ — operation: create
+   ```
+   The skill owns the whole render (Patton board, counters, banner, interactivity) from its [story-map-template.md](../bokata-render/resources/story-map-template.md). It renders the board from `features.md` with **the User Task (Step) as the addressable column unit**, never a Feature-as-column with tasks listed inside.
 
 ---
 
 ## Step 6: Verification Gate (No New Rendering Here)
 
-This step is a **checklist verification** only — no new rendering work happens here:
+This step is a **checklist verification** only — no rendering work happens here:
 
 - [ ] `<docs>/<initiative-slug>/features.md` exists and is final (backbone + functional ACs + empty Increment options per Feature)
-- [ ] `<docs>/<initiative-slug>/features.html` exists (if `html`)
-- [ ] `<docs>/<initiative-slug>/story-map.html` exists (if `story_map`)
+- [ ] The `bokata-render` subagent was dispatched for `story-map.html` (if `story_map`)
 
 ---
 
@@ -256,8 +244,8 @@ Print to user:
 **Location:** <docs>/{{INITIATIVE_SLUG}}/
 
 **Artifacts created:**
-- features.md / .html ✅ — {{NUM_FEATURES}} Features, {{NUM_TASKS}} User Tasks, {{NUM_REQUIREMENTS}} Requirements, {{NUM_SCENARIOS}} Scenarios (functional depth)
-- story-map.html ✅ — Patton-style board (Features spanning the backbone header, User Tasks as individual Step columns, release rows filled by each slice)
+- features.md ✅ — {{NUM_FEATURES}} Features, {{NUM_TASKS}} User Tasks, {{NUM_REQUIREMENTS}} Requirements, {{NUM_SCENARIOS}} Scenarios (functional depth)
+- story-map.html ✅ — dashboard being rendered by the bokata-render subagent (Patton board with statuses, next step and counters)
 
 **Trio Review Notes:**
 [If any reconciliation notes exist: "See features.md for [N] reconciliation notes flagged during PM/Designer/Engineer review."]
@@ -281,6 +269,6 @@ Print to user:
 - [ ] Trio Reconciliation Notes section is present if any conflicts were resolved
 - [ ] Functional AC Requirements use SHALL/SHOULD language
 - [ ] Functional AC Scenarios use WHEN/THEN (Given implicit/optional)
-- [ ] Every `.html` was rendered and written immediately after its `.md` was finalized (not deferred to a final batch step)
-- [ ] `story-map.html` exists, with Features spanning the row-1 backbone header and each User Task as its own Step column underneath (not Features-as-columns with tasks listed inside)
+- [ ] The `bokata-render` subagent was dispatched for `story-map.html` immediately after `features.md` was final (not deferred to a final batch step)
+- [ ] `story-map.html` is built with Features spanning the row-1 backbone header and each User Task as its own Step column underneath (not Features-as-columns with tasks listed inside)
 - [ ] All parallel subagent reviews were issued together and completed before reconciliation began

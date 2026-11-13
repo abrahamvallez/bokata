@@ -44,7 +44,7 @@ npx bokata@latest sync             # regenerate agents after editing .bokata.jso
 | Size | Path |
 |---|---|
 | **S** — a fix or tweak | plan mode → `bokata-tdd` (no documents) |
-| **M** — one clear feature | `bokata-shape` → `bokata-slice` (single mode) → `bokata-plan` → `code-executor` |
+| **M** — one clear feature | `bokata-shape` → `bokata-slice` (single mode; keeps the options backlog in a one-feature `features.md`) → `bokata-plan` → `code-executor` |
 | **L** — several features | `bokata-shape` → `bokata-feature-map` → `bokata-slice` (1–3 features) → `bokata-plan` → `code-executor` |
 
 `bokata-shape` proposes the size; you confirm it.
@@ -54,12 +54,13 @@ npx bokata@latest sync             # regenerate agents after editing .bokata.jso
 | Skill | What it does | Writes |
 |---|---|---|
 | `bokata-shape` | Grill (the configured method) + Shape Up shaping: narrow the problem, 2–3 approaches as Mermaid breadboards (low-fi HTML sketch when layout matters), one trio pass, rabbit holes and no-gos | `pitch.md` |
-| `bokata-feature-map` | Features Backbone + functional ACs with the trio; asks only about gaps in its input | `features.md` (+ `.html`, `story-map.html`) |
-| `bokata-slice` | Pick 1–3 features → increment options → you choose the slice (walking skeleton first) → concrete ACs for the chosen increments only | `slices/<nn>-<name>.md` (+ `.html`) |
-| `bokata-plan` | A contract for your harness's own plan mode: the plan becomes checklists under each increment, starting with its acceptance test | the slice's `Plan:` |
+| `bokata-feature-map` | Features Backbone + functional ACs with the trio; asks only about gaps in its input | `features.md` + the initiative's `story-map.html` dashboard (rendered by `bokata-render`) |
+| `bokata-slice` | Pick 1–3 features → increment options → you choose the slice (walking skeleton first) → concrete ACs for the chosen increments only | `slices/<nn>-<name>.md`; the Increment options in `features.md` (single mode creates it); the slice's cards in `story-map.html` |
+| `bokata-plan` | A contract for your harness's own plan mode: the plan becomes checklists under each increment, starting with its acceptance test | the slice's `Plan:`; syncs `story-map.html` |
 | `bokata-tdd` | Default code method: an acceptance test per increment, then strict small-step TDD with evidence rules | commits |
 | `bokata-refactor` | Default refactor method: Kent Beck's four rules of simple design, tidyings, code smells mapped to the move that fixes each | `refactor` commits |
-| `bokata-status` | Read-only: phase, active slice, next step, open unknowns, features not yet sliced | — |
+| `bokata-status` | Read-only: phase, active slice, next step, open unknowns, features not yet sliced; may dispatch a catch-up render if the story map lags |
+| `bokata-render` | Internal: renders and keeps `story-map.html` current (statuses, next step, counters, interactivity) from the markdown; loaded by the `story-map-renderer` agent, never by the user | — |
 | `bokata-feature-mapper`, `bokata-feature-slicer`, `bokata-acceptance-criteria` | The methods the phases use; usable on their own | — |
 
 ### Agents
@@ -69,6 +70,7 @@ npx bokata@latest sync             # regenerate agents after editing .bokata.jso
 | `bokata-product-manager` / `-designer` / `-engineer` | Product Trio reviewers and rule contributors | read |
 | `code-executor` | Builds a planned slice with `methods.code`; keeps the slice checklist, test mapping and unknowns current; never pushes | write |
 | `design-reviewer` | Reviews one step's diff with `methods.refactor` and the coding standards | read |
+| `story-map-renderer` | Loads `bokata-render` and keeps `story-map.html` current; dispatched by the skills and by `code-executor`, never by you | write |
 
 During trio reviews the **main thread** is the neutral coordinator: it applies
 non-conflicting findings, settles factual conflicts against the artifacts, and escalates
@@ -85,22 +87,53 @@ Initiative (pitch.md)
              └ Steps (the plan checklist, checked off commit by commit)
 ```
 
-## Running the executor
+## Running the harness
 
-The plan ends with a hand-off line. How you launch it is up to you:
+The flow is **skills you name in conversation**; agents are selected or dispatched depending on
+the harness. Install first (`npx bokata@latest install`), then:
 
-```bash
-# OpenCode, in a worktree
-opencode run --agent code-executor "Build slice docs/initiatives/<slug>/slices/01-<name>.md"
+| Step | You say | Produces |
+|---|---|---|
+| Shape | "Shape this idea: …" (loads `bokata-shape`) | `pitch.md` |
+| Feature map (L initiatives) | "bokata-feature-map <slug>" | `features.md`; the dashboard renders in background |
+| Slice | "bokata-slice <slug>" — pick 1–3 features | `slices/<nn>-<name>.md` |
+| Plan | In your harness's plan agent: "bokata-plan docs/initiatives/<slug>/slices/<nn>-<name>.md" | checklists in the slice, `Status: planned` |
+| Build | Run `code-executor` with the hand-off line the plan printed | commits, checkboxes, story map kept current |
+| Check | "bokata-status <slug>" | phase, next step; catches the story map up if it lags |
 
-# Claude Code
-claude --agent code-executor "Build slice docs/initiatives/<slug>/slices/01-<name>.md"
+`story-map-renderer` has no step of its own: the skills above and `code-executor` dispatch it
+(cheap render model, background) whenever the markdown changes.
 
-# An orchestrator such as Orca: plan with one harness, then ask it to spawn
-# code-executor in a new worktree with the hand-off line.
-```
+### Per harness
+
+- **OpenCode** — skills read from `.agents/skills/`; agents install to `.opencode/agents/`.
+  Name the skill in the session. Primary-capable agents (`code-executor`) appear in the agent
+  switcher (Tab); `mode: subagent` agents (the trio, `design-reviewer`, `story-map-renderer`)
+  never do — the session dispatches them itself. Headless:
+  `opencode run --agent code-executor "Build slice docs/initiatives/<slug>/slices/01-<name>.md"`
+- **Claude Code** — skills install to `.claude/skills/` (invoke by name or `/bokata-shape`);
+  agents to `.claude/agents/`. The session spawns subagents by name. Headless:
+  `claude --agent code-executor "Build slice …"`
+- **Codex** — agents install to `.codex/agents/*.toml`; skills read from `.agents/skills/`.
+  Ask in plain language ("use the code-executor agent to build slice …"); `/agent` switches
+  between agent threads.
+- **Cursor** — skills in `.cursor/skills/`, agents in `.cursor/agents/`; pick the agent from
+  Cursor's selector or name the skill in chat.
+
+### Orchestrators
 
 Scopes marked `Parallel-safe: yes` can run in separate worktrees at the same time.
+
+- **Orca** — spawn the executor in a fresh worktree with the hand-off line:
+  `orca worktree create --name <task> --no-parent --agent codex --prompt "<hand-off line>" --json`
+  (or `--agent claude`). For a worktree that already exists:
+  `orca agent launch --agent codex --worktree <id> --prompt "<hand-off line>"`.
+- **Herdr** — split a pane, start the agent in it, and send the line:
+  `herdr pane split --current --direction right --cwd "$PWD" --no-focus` →
+  `herdr agent start executor --kind codex --pane <id>` →
+  `herdr agent prompt executor "<hand-off line>" --wait`
+- **Plain terminals** — open a worktree and run your harness's headless command with the
+  hand-off line.
 
 ## Configuration — `.bokata.json`
 
@@ -110,8 +143,7 @@ Everything is optional; these are the defaults.
 {
   "docs": "docs/initiatives",          // where initiative folders go
   "language": "auto",                  // conversation follows the user
-  "html": true,                        // render .html next to features and slices
-  "story_map": true,                   // Patton story map for feature maps
+  "story_map": true,                   // story-map.html dashboard; false = markdown only
   "memory": {                          // long-lived files bokata reads (and shape updates)
     "constitution": "CONSTITUTION.md",
     "glossary": "GLOSSARY.md",
@@ -127,7 +159,7 @@ Everything is optional; these are the defaults.
     "refactor": "bokata-refactor"
   },
   "harnesses": [],                     // filled by install
-  "models": { … }                      // per harness: trio | reviewer | executor (see below)
+  "models": { … }                      // per harness: trio | reviewer | executor | render (see below)
 }
 ```
 
@@ -160,15 +192,16 @@ slot: they live in `memory.standards`, which the executor and the reviewer alway
 ### Default models
 
 Planning and analysis (the trio and the design reviewer) get a planning model; writing code
-(the executor) gets a coding model. Planning itself runs in your main session — open it with
-the planning model of your harness.
+(the executor) gets a coding model; the story-map renderer gets a cheap model because its job is
+mechanical. Planning itself runs in your main session — open it with the planning model of your
+harness.
 
-| Harness | Plan and analyse (`trio`, `reviewer`) | Write code (`executor`) |
-|---|---|---|
-| Claude Code | `opus` | `sonnet` |
-| OpenCode | `opencode-go/glm-5.3-flash` | `opencode-go/deepseek-v4.1-flash` |
-| Cursor | `glm-flash` | `sonnet` |
-| Codex | `gpt-5.6-sol` | `gpt-5.6-luna` |
+| Harness | Plan and analyse (`trio`, `reviewer`) | Write code (`executor`) | Render the map (`render`) |
+|---|---|---|---|
+| Claude Code | `opus` | `sonnet` | `haiku` |
+| OpenCode | `opencode-go/glm-5.3-flash` | `opencode-go/deepseek-v4.1-flash` | `opencode-go/glm-5.3-flash` |
+| Cursor | `glm-flash` | `sonnet` | `glm-flash` |
+| Codex | `gpt-5.6-sol` | `gpt-5.6-luna` | `gpt-5.6-luna` |
 
 Set a role to `null` to use the harness's own default model instead.
 
