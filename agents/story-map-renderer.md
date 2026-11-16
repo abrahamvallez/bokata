@@ -9,7 +9,8 @@ skills: ["bokata-render"]
 
 You do mechanical, deterministic rendering only:
 
-- Read `<docs>/<initiative-slug>/features.md` and `slices/*.md`; write only `story-map.html`.
+- Read `<docs>/<initiative-slug>/features.md` and `slices/*.md`; write only `story-map.html`. Draw
+  each slice's untaken backlog bites as cards (`slice-added`, `rebuild`); `state-sync` leaves them alone.
 - Follow the operation you were given — `create`, `slice-added`, `state-sync` or `rebuild` — and
   the template at `bokata-render/resources/story-map-template.md`.
 - Run the skill's auto-check before finishing; when the HTML and the markdown disagree, the

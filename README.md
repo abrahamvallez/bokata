@@ -44,7 +44,7 @@ npx bokata@latest sync             # regenerate agents after editing .bokata.jso
 | Size | Path |
 |---|---|
 | **S** — a fix or tweak | plan mode → `bokata-tdd` (no documents) |
-| **M** — one clear feature | `bokata-shape` → `bokata-slice` (single mode; keeps the options backlog in a one-feature `features.md`) → `bokata-plan` → `code-executor` |
+| **M** — one clear feature | `bokata-shape` → `bokata-slice` (single mode; keeps the bite-sized backlog in a one-feature `features.md`) → `bokata-plan` → `code-executor` |
 | **L** — several features | `bokata-shape` → `bokata-feature-map` → `bokata-slice` (1–3 features) → `bokata-plan` → `code-executor` |
 
 `bokata-shape` proposes the size; you confirm it.
@@ -55,11 +55,11 @@ npx bokata@latest sync             # regenerate agents after editing .bokata.jso
 |---|---|---|
 | `bokata-shape` | Grill (the configured method) + Shape Up shaping: narrow the problem, 2–3 approaches as Mermaid breadboards (low-fi HTML sketch when layout matters), one trio pass, rabbit holes and no-gos | `pitch.md` |
 | `bokata-feature-map` | Features Backbone + functional ACs with the trio; asks only about gaps in its input | `features.md` + the initiative's `story-map.html` dashboard (rendered by `bokata-render`) |
-| `bokata-slice` | Pick 1–3 features → increment options → you choose the slice (walking skeleton first) → concrete ACs for the chosen increments only | `slices/<nn>-<name>.md`; the Increment options in `features.md` (single mode creates it); the slice's cards in `story-map.html` |
-| `bokata-plan` | A contract for your harness's own plan mode: the plan becomes checklists under each increment, starting with its acceptance test | the slice's `Plan:`; syncs `story-map.html` |
+| `bokata-slice` | Pick 1–4 features → one `feature-slicer` per feature writes Steps and 3+ options per Step, prunes them (each drop with a reason), and groups the rest into small INVEST bites per User Task → the trio reviews the full trace and the bites → you compose Inc 1 (walking skeleton) → concrete ACs for it only. it proposes a roadmap of the next increments (`### Proposed increments`, yours to edit); `--next` adds the next increment as one or more bites and re-prunes what it makes obsolete; `--done` marks the slice done | `slices/<nn>-<name>.md` (slicing, increments, backlog of bites); a one-line `**Slice:**` summary per feature in `features.md`; the increment's cards and the untaken bites in `story-map.html` |
+| `bokata-plan` | A contract for your harness's own plan mode: the plan becomes checklists per slice and increment, starting with its acceptance test | the initiative's `plan.md`; syncs `story-map.html` |
 | `bokata-tdd` | Default code method: an acceptance test per increment, then strict small-step TDD with evidence rules | commits |
 | `bokata-refactor` | Default refactor method: Kent Beck's four rules of simple design, tidyings, code smells mapped to the move that fixes each | `refactor` commits |
-| `bokata-status` | Read-only: phase, active slice, next step, open unknowns, features not yet sliced; may dispatch a catch-up render if the story map lags |
+| `bokata-status` | Read-only: phase, open slices, current increment and next step, open unknowns, each slice's backlog of bites, features not yet sliced; may dispatch a catch-up render if the story map lags |
 | `bokata-render` | Internal: renders and keeps `story-map.html` current (statuses, next step, counters, interactivity) from the markdown; loaded by the `story-map-renderer` agent, never by the user | — |
 | `bokata-feature-mapper`, `bokata-feature-slicer`, `bokata-acceptance-criteria` | The methods the phases use; usable on their own | — |
 
@@ -68,9 +68,10 @@ npx bokata@latest sync             # regenerate agents after editing .bokata.jso
 | Agent | Role | Access |
 |---|---|---|
 | `bokata-product-manager` / `-designer` / `-engineer` | Product Trio reviewers and rule contributors | read |
-| `code-executor` | Builds a planned slice with `methods.code`; keeps the slice checklist, test mapping and unknowns current; never pushes | write |
+| `code-executor` | Builds a slice's planned increment with `methods.code`; keeps `plan.md` (checklist and test mapping) and the slice's unknowns current; never pushes | write |
 | `design-reviewer` | Reviews one step's diff with `methods.refactor` and the coding standards | read |
 | `story-map-renderer` | Loads `bokata-render` and keeps `story-map.html` current; dispatched by the skills and by `code-executor`, never by you | write |
+| `feature-slicer` | Loads `bokata-feature-slicer` and slices one feature into Steps and options; `bokata-slice` dispatches one per feature, in parallel | read |
 
 During trio reviews the **main thread** is the neutral coordinator: it applies
 non-conflicting findings, settles factual conflicts against the artifacts, and escalates
@@ -80,12 +81,33 @@ genuine product trade-offs to you as one decision point with a recommended defau
 
 ```
 Initiative (pitch.md)
- └ Features (features.md — also holds each feature's increment options)
-    └ Slice (1–3 features you pick → usable end to end)
-       └ Scope (the part of one feature in this slice; Unknowns ▲ / none ▼)
-          └ Increment (functional on its own; must-have or ~nice-to-have)
-             └ Steps (the plan checklist, checked off commit by commit)
+ └ Features (features.md — the summary: backbone, functional ACs, one Slice line per feature)
+    └ Slice (slices/<nn>-<name>.md — 1–4 features → usable end to end; open until you mark it done)
+       ├ Slicing (per feature: User Task → Step → options F1-2.3, with strategy and coverage;
+       │          pruned with a reason, a target per Step)
+       ├ Increment (the walking skeleton or one or more bites the user can see; Inc 1 = skeleton;
+       │  │         concrete ACs written when it enters; Unknowns ▲ / none ▼)
+       │  └ Plan steps (in the initiative's plan.md, per slice and Inc; checked off commit by commit)
+       └ Backlog (bites F1-a…: INVEST groups of options per User Task, titled for the user —
+                  what --next picks from)
 ```
+
+A feature belongs to one slice only. An **option** is one way to do one Step; a **bite** groups
+the options of one or several Steps that make sense together (small, INVEST); an **increment** is
+the walking skeleton or one or more bites — whatever lets the user see or do something new.
+Options are explored widely and then pruned (`obsolete`, `dominated`, `filler`, `contradicts`),
+so you prioritize a handful of bites instead of a hundred option IDs. After Inc 1 is built,
+`bokata-slice <nn> --next` adds the next increment to the same slice; when you are done with it,
+`bokata-slice <nn> --done`.
+
+**Upgrading an initiative sliced with bokata ≤ 2.0** (scopes per feature, `Increment options`
+in `features.md`): re-run `npx bokata@latest install` so the `feature-slicer` agent is installed,
+let the old slices finish as they are, and slice the remaining features with the new
+`bokata-slice`. Run `bokata-render` with `rebuild` once to redraw the story map.
+
+**Slices written before `plan.md` and `done`** (plan checklists and `Tests:` inside the slice file,
+`Status: closed`) are not read by the current skills: move each Inc's `Plan:` and `Tests:` into
+`plan.md` (under `## Slice <nn>` → `### Inc <n>`) and change `closed` to `done`.
 
 ## Running the harness
 
@@ -96,7 +118,7 @@ the harness. Install first (`npx bokata@latest install`), then:
 |---|---|---|
 | Shape | "Shape this idea: …" (loads `bokata-shape`) | `pitch.md` |
 | Feature map (L initiatives) | "bokata-feature-map <slug>" | `features.md`; the dashboard renders in background |
-| Slice | "bokata-slice <slug>" — pick 1–3 features | `slices/<nn>-<name>.md` |
+| Slice | "bokata-slice <slug>" — pick 1–4 features; later "bokata-slice <nn> --next" | `slices/<nn>-<name>.md` |
 | Plan | In your harness's plan agent: "bokata-plan docs/initiatives/<slug>/slices/<nn>-<name>.md" | checklists in the slice, `Status: planned` |
 | Build | Run `code-executor` with the hand-off line the plan printed | commits, checkboxes, story map kept current |
 | Check | "bokata-status <slug>" | phase, next step; catches the story map up if it lags |
@@ -108,7 +130,7 @@ the harness. Install first (`npx bokata@latest install`), then:
 
 - **OpenCode** — skills read from `.agents/skills/`; agents install to `.opencode/agents/`.
   Name the skill in the session. Primary-capable agents (`code-executor`) appear in the agent
-  switcher (Tab); `mode: subagent` agents (the trio, `design-reviewer`, `story-map-renderer`)
+  switcher (Tab); `mode: subagent` agents (the trio, `feature-slicer`, `design-reviewer`, `story-map-renderer`)
   never do — the session dispatches them itself. Headless:
   `opencode run --agent code-executor "Build slice docs/initiatives/<slug>/slices/01-<name>.md"`
 - **Claude Code** — skills install to `.claude/skills/` (invoke by name or `/bokata-shape`);
@@ -122,7 +144,7 @@ the harness. Install first (`npx bokata@latest install`), then:
 
 ### Orchestrators
 
-Scopes marked `Parallel-safe: yes` can run in separate worktrees at the same time.
+Increments marked `Parallel-safe: yes` can run in separate worktrees at the same time.
 
 - **Orca** — spawn the executor in a fresh worktree with the hand-off line:
   `orca worktree create --name <task> --no-parent --agent codex --prompt "<hand-off line>" --json`

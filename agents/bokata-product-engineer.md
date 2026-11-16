@@ -57,26 +57,40 @@ You contribute Rules and Scenarios from the feasibility/sustainability lens:
 
 You are invoked in parallel with PM and Designer, told to use `--functional` depth mode and to skip discovery (already resolved). Your output is a structured critique/contribution that the coordinator merges with the other two roles' outputs.
 
-### In `bokata-slice` (Increment options + Concrete ACs)
+### In `bokata-slice` (Slicing review + Concrete ACs per increment)
 
 **Stage 1 (Slicing Review — Reviewer):**
-The coordinator invokes `bokata-feature-slicer` and you review the resulting Walking Skeleton for **sustainability**:
-- Do the skeleton choices establish patterns that are defensible for increments to follow?
-- Are there any quick shortcuts in the skeleton (e.g., hardcoded values) that are explicitly safe to revisit, or dangerous shortcuts that break when increments add to them?
-- Does the skeleton commit to a data model or API shape that will need reshaping later?
-- Are skeleton items truly independent, or do they have hidden sequencing dependencies?
+The coordinator dispatches one `feature-slicer` subagent per Feature and gives you the **full
+traces**: every User Task → Steps → options (with strategy and coverage) and the Walking Skeleton
+proposal as option IDs, plus the **Pruned** list and the **Bites** (INVEST groups of options,
+per User Task). Options are alternatives, not a plan: never ask to remove one because you prefer
+another — propose what to add or which to pick. You can object to a pruning (it dropped value or
+broke something) and to how options were grouped. **For every Step, check whether a cheaper option is missing** (fake
+or hardcoded data, a manual crutch, one case only, an existing component or service); if so,
+propose it with its Step ID, its strategy and one line of what the user sees.
 
-Contribute a brief **Technical Sustainability Assessment** in your output: per-skeleton-item sustainability scores, with notes on shortcuts and reversibility.
+From the sustainability lens:
+- Are the Steps and their layers sound?
+- For each skeleton pick: is it reversible? Which shortcuts (hardcoded values, manual steps, in-memory data) are safe to revisit, and which break when later increments build on them?
+- Does a pick commit to a data model or API shape that will need reshaping later? Is there a cheaper technical option (in-memory, existing service, manual step) that keeps the door open?
+- Do the picks have hidden sequencing dependencies?
+
+**Bites (feasibility lens):**
+- Are the `depends on` links right, with no cycle, and does any bite depend on something that is pruned or deferred?
+- Is each bite small enough to size (about 5 options or fewer, one reason to change)? Which should be split along a technical seam?
+- Does a pruning break a contract: an option a later bite or another Feature relies on, or a shortcut that was obsolete only by name?
+
+Contribute a brief **Technical Sustainability Assessment**: per skeleton pick, reversibility and shortcut notes, the missing cheaper technical options, and the dependency or size problems in the bites.
 
 **Stage 2 (Concrete ACs — Contributor):**
-You contribute Rules and Scenarios from the feasibility/sustainability lens, **scoped per Walking Skeleton item and per Increment**:
-- Per skeleton item: data model shape, API contracts, concurrency/permission guards, offline/sync expectations
-- Per increment: whether it can be built in isolation or if it needs to reshape the skeleton's choices
+You contribute Rules and Scenarios from the feasibility/sustainability lens for **one increment** — the one entering the slice:
+- Data model shape, contracts, concurrency/permission guards, offline/sync expectations it needs
+- Whether it builds on earlier increments as they are, or needs to reshape them
 - Boundary condition Rules (e.g., "stories >= 3 paragraphs, <= 5 paragraphs")
 - Error/retry Rules (e.g., "API timeouts retry with exponential backoff")
 - Any Rule that affects whether an increment's implementation can follow the skeleton's pattern or needs to diverge
 
-Your output is scoped per item. Use `--concrete` depth mode with maximally concrete technical example data: specific payload shapes (described behaviorally, not as code), specific limits, specific concurrency scenarios.
+Use `--concrete` depth mode with maximally concrete technical example data: specific payload shapes (described behaviorally, not as code), specific limits, specific concurrency scenarios.
 
 ## Output Format
 
@@ -93,6 +107,9 @@ Tag every finding so the neutral coordinator can route it without guessing:
 
 ### Technical Sustainability Assessment
 [For slicing reviews: per-skeleton-item sustainability scores, with notes on shortcuts/reversibility]
+
+### Bites
+[For slicing reviews: findings on the Pruned list and the Bites from your lens — titles, grouping, order, dependencies, size — each as `F1-a: <finding>`; "none" if all is fine]
 
 ### Suggested Edits
 [Specific technical reframing or de-risking]

@@ -26,8 +26,8 @@ Refer to [Strategies Toolkit](breakdown-strategies.md) for detailed descriptions
 
 ### Step 1: Identify All Steps
 
-1. Locate `## Features Backbone` section in the provided input
-2. For each User Task, find all `### Steps` sections
+1. Take the Phase 1 output (the Steps of every User Task)
+2. For each User Task, list its Steps
 3. Extract for each step: name, description, layer (UI/Logic/Data/Integration), and any technical notes
 4. Create a complete list of all steps requiring incremental options
 
@@ -87,7 +87,8 @@ For each step, create 3+ incremental options by:
 5. Naming each option using `[Action] [Object]` format
 
 Validate each step's options:
-- Minimum 3 options per step (WARNING if exactly 3)
+- Minimum 3 options per step (aim for 4)
+- At least one cheap-family option (Crutches, Dummy to Dynamic, Zero/One/Many…)
 - All options specific (not generic)
 - Dependencies explicit
 - Progression clear (simple → advanced)
@@ -132,10 +133,10 @@ Validate each step's options:
 Generate markdown output via [Output Template](output-template-increments.md).
 
 Formatting requirements:
-1. Checkbox format: `[ ] **N.M: Name** - Description`
-2. Applied Strategies section (2-3 strategies listed)
-3. Rationale section (1-2 sentences explaining option set)
-4. Options progress from simple → complex
+1. One line per option, nested under its Step: `F1-N.M Name — description · strategy`
+2. A closing `strategies:` line per Step (2-3 strategies + one-line rationale)
+3. Options progress from simple → complex
+4. At least one option per Step from the cheap family (Crutches, Dummy to Dynamic, Zero/One/Many, Workflow Simplification, Extract Basic Utility), or a one-line reason why none applies
 
 ---
 
@@ -150,58 +151,37 @@ For completed Incremental Options sections:
 ### Example 1: "Capture Audio Input" Step
 
 ```markdown
-### Incremental Options (0/5)
+- F1-1.1 Browser Microphone (Web Audio API) — Capture using browser's built-in Web Audio API with basic permissions prompt
+- F1-1.2 Native Mobile Audio — Use platform-specific microphone APIs (AVFoundation for iOS, MediaRecorder for Android)
+- F1-1.3 Audio Processing Pipeline — Add noise reduction and level monitoring with real-time visual feedback
+- F1-1.4 Multi-device Support — Allow selection from multiple input devices (built-in mic, USB mic, Bluetooth headset)
+- F1-1.5 Background Recording — Enable recording to continue when app is backgrounded or screen is off
 
-[ ] **1.1: Browser Microphone (Web Audio API)** - Capture using browser's built-in Web Audio API with basic permissions prompt
-
-[ ] **1.2: Native Mobile Audio** - Use platform-specific microphone APIs (AVFoundation for iOS, MediaRecorder for Android)
-
-[ ] **1.3: Audio Processing Pipeline** - Add noise reduction and level monitoring with real-time visual feedback
-
-[ ] **1.4: Multi-device Support** - Allow selection from multiple input devices (built-in mic, USB mic, Bluetooth headset)
-
-[ ] **1.5: Background Recording** - Enable recording to continue when app is backgrounded or screen is off
-
-**Applied Strategies:** Dummy to Dynamic (Web API → Native), Data Variation (single device → multiple devices), Extract Basic Utility (basic capture → enhanced with processing)
-**Rationale:** Start with simplest browser API, progressively add native capabilities, device options, and background support for power users.
+- strategies: Dummy to Dynamic (Web API → Native), Data Variation (single device → multiple devices), Extract Basic Utility (basic capture → enhanced with processing) — Start with simplest browser API, progressively add native capabilities, device options, and background support for power users.
 ```
 
 ### Example 2: "Execute Search Query" Step
 
 ```markdown
-### Incremental Options (0/6)
+- F1-2.1 Exact Text Match — Search product names for exact substring match (case-insensitive)
+- F1-2.2 Fuzzy Text Search — Add fuzzy matching to handle typos and similar words (Levenshtein distance)
+- F1-2.3 Filter by Single Attribute — Allow filtering by one attribute (e.g., category OR price range)
+- F1-2.4 Multi-attribute Filters — Support combining multiple filters with AND logic (category AND price range AND rating)
+- F1-2.5 Full-text Search with Ranking — Implement full-text search with relevance scoring (tf-idf or similar)
+- F1-2.6 Natural Language Query — Parse natural language queries ("cheap laptops under $500") into structured filters
 
-[ ] **2.1: Exact Text Match** - Search product names for exact substring match (case-insensitive)
-
-[ ] **2.2: Fuzzy Text Search** - Add fuzzy matching to handle typos and similar words (Levenshtein distance)
-
-[ ] **2.3: Filter by Single Attribute** - Allow filtering by one attribute (e.g., category OR price range)
-
-[ ] **2.4: Multi-attribute Filters** - Support combining multiple filters with AND logic (category AND price range AND rating)
-
-[ ] **2.5: Full-text Search with Ranking** - Implement full-text search with relevance scoring (tf-idf or similar)
-
-[ ] **2.6: Natural Language Query** - Parse natural language queries ("cheap laptops under $500") into structured filters
-
-**Applied Strategies:** Zero/One/Many (no filters → one filter → many filters), Business Rule Progression (exact → fuzzy → ranked), Data Variation (text only → attributes → natural language)
-**Rationale:** Build from simplest exact match toward sophisticated natural language understanding, allowing progressive enhancement of search quality.
+- strategies: Zero/One/Many (no filters → one filter → many filters), Business Rule Progression (exact → fuzzy → ranked), Data Variation (text only → attributes → natural language) — Build from simplest exact match toward sophisticated natural language understanding, allowing progressive enhancement of search quality.
 ```
 
 ### Example 3: "Persist User Data" Step
 
 ```markdown
-### Incremental Options (0/4)
+- F1-3.1 LocalStorage (Client-side) — Store user data in browser localStorage (5MB limit, no backend required)
+- F1-3.2 SQLite (Local Database) — Use SQLite for local structured storage with query capability
+- F1-3.3 REST API (Cloud Sync) — Sync data to cloud via REST API (requires authentication)
+- F1-3.4 Real-time Database (Firebase/Supabase) — Real-time bi-directional sync across devices
 
-[ ] **3.1: LocalStorage (Client-side)** - Store user data in browser localStorage (5MB limit, no backend required)
-
-[ ] **3.2: SQLite (Local Database)** - Use SQLite for local structured storage with query capability
-
-[ ] **3.3: REST API (Cloud Sync)** - Sync data to cloud via REST API (requires authentication)
-
-[ ] **3.4: Real-time Database (Firebase/Supabase)** - Real-time bi-directional sync across devices
-
-**Applied Strategies:** Dummy to Dynamic (local → cloud), Split by Capacity (5MB → unlimited), Walking Skeleton on Crutches (client-only → full cloud)
-**Rationale:** Start with zero backend complexity (localStorage), progressively add server sync, then real-time capabilities as needed.
+- strategies: Dummy to Dynamic (local → cloud), Split by Capacity (5MB → unlimited), Walking Skeleton on Crutches (client-only → full cloud) — Start with zero backend complexity (localStorage), progressively add server sync, then real-time capabilities as needed.
 ```
 
 ---
@@ -236,6 +216,18 @@ For completed Incremental Options sections:
 - User types mentioned → user segment narrowing
 - When in doubt, start with Zero/One/Many + Dummy to Dynamic
 
+**Issue: "Each Step has one option per functional requirement"**
+→ Solution: You are copying the ACs, not slicing. The ACs say WHAT must end up true; options are
+cheaper ways to get there first. Generate options from the Step and the strategies, then check
+coverage — an option that covers a requirement only partially or with fake data is valuable.
+- ❌ "Show player list" → "Show player list sorted by number" → "Show player list with photos" (one per AC)
+  ✅ INSTEAD: "Hardcoded list of 5 players" (Dummy to Dynamic) → "List from the roster API" →
+  "Empty roster state" (Zero/One/Many) → "Sorted by number with photos"
+
+**Issue: "The cheap options disappeared"**
+→ Solution: Options like "the coach sends it by hand" or "hardcoded data" are not embarrassing —
+they are the Walking Skeleton candidates. Write them, state the shortcut openly, and keep them.
+
 **Interactive Use:**
 If you're stuck, ask me to list strategies for a specific step, and I'll suggest applications.
 
@@ -246,6 +238,8 @@ If you're stuck, ask me to list strategies for a specific step, and I'll suggest
 - [ ] ALL Steps have Incremental Options (no gaps)
 - [ ] At least one option per step is clearly the simplest viable (Walking Skeleton candidate)
 - [ ] Aim for 4+ options per step — 3 is acceptable if the step is genuinely narrow; note why
-- [ ] Each option uses `[ ] **N.M: Name** - Description` format and is independently deployable
+- [ ] Each option uses `F1-N.M Name — description · strategy` and is independently deployable
 - [ ] Options progress from simple → complex
-- [ ] Applied Strategies (2-3) and Rationale documented per step
+- [ ] Every Step has a `strategies:` line with 2+ strategies, and a cheap-family option (or a reason)
+- [ ] Every option states its shortcut openly ("hardcoded list", "approved by hand")
+- [ ] Options were not derived from the functional ACs (those are only used in the Phase 3 coverage check)

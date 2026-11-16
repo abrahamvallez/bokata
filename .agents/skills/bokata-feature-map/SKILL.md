@@ -214,7 +214,7 @@ The paths and formats in `.bokata.json` win over the domain skill's own.
 
 One file holds the backbone and its functional ACs, so a slice can be chosen from a single place:
 
-1. **Write** `<docs>/<initiative-slug>/features.md` from the features template: the final reconciled backbone, the functional ACs of each User Task placed **under that User Task**, an empty `### Increment options` section per Feature (filled later by `bokata-slice`), and `## Trio Reconciliation Notes`.
+1. **Write** `<docs>/<initiative-slug>/features.md` from the features template: the final reconciled backbone, the functional ACs of each User Task placed **under that User Task**, a `**Slice:** not sliced yet` line per Feature (filled later by `bokata-slice`; the slicing itself lives in the slice files, never here), and `## Trio Reconciliation Notes`.
 
 2. **Dispatch the story-map render** (if `story_map` is true): after `features.md` is final, dispatch the `story-map-renderer` subagent (it loads the `bokata-render` skill), operation `create`, passing `<docs>/<initiative-slug>/`. It runs on its own cheap model role (`models.<harness>.render`) in background — rendering is mechanical and must not block the summary. Do not render the HTML yourself and do not wait for the subagent to finish:
    ```
@@ -229,7 +229,7 @@ One file holds the backbone and its functional ACs, so a slice can be chosen fro
 
 This step is a **checklist verification** only — no rendering work happens here:
 
-- [ ] `<docs>/<initiative-slug>/features.md` exists and is final (backbone + functional ACs + empty Increment options per Feature)
+- [ ] `<docs>/<initiative-slug>/features.md` exists and is final (backbone + functional ACs + a `**Slice:**` line per Feature)
 - [ ] The `bokata-render` subagent was dispatched for `story-map.html` (if `story_map`)
 
 ---

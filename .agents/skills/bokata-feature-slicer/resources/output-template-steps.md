@@ -1,24 +1,8 @@
-## Feature: [Feature Name]
-<!-- Feature ID: {PRJ}-FEAT-{hash} -->
+<!-- Phase 1 output — one block per User Task. Steps are numbered across the whole Feature. -->
 
-## User Task: [User Task Name]
-<!-- Task ID: {PRJ}-TASK-{hash} | ACs: features.md#{PRJ}-TASK-{hash} -->
+### User Task: [User Task Name]
+- **S1 [Action] [Object]** · [UI | Logic | Data | Integration] — [what happens, one line] · note: [technical note from the code or constraints, optional]
+- **S2 [Action] [Object]** · [Layer] — [what happens]
+- **S3 [Action] [Object]** · [Layer] — [what happens]
 
-### Steps
-
-#### Step 1: [Action] [Object]
-**Layer:** [UI | Logic | Data | Integration]
-**Description:** [What this step accomplishes - 1-2 sentences]
-**Technical Note:** [Key architectural/design decision from research — e.g., "Uses existing session validation service — no new auth logic needed"]
-
-#### Step 2: [Action] [Object]
-**Layer:** [UI | Logic | Data | Integration]
-**Description:** [What this step accomplishes - 1-2 sentences]
-**Technical Note:** [Key architectural/design decision from research — e.g., "Database-level uniqueness constraint — no app-layer validation needed"]
-
-#### Step 3: [Action] [Object]
-**Layer:** [UI | Logic | Data | Integration]
-**Description:** [What this step accomplishes - 1-2 sentences]
-**Technical Note:** [Key architectural/design decision from research — e.g., "Follows existing repository lookup pattern"]
-
-[Additional steps as needed...]
+[Next User Task continues the numbering: S4, S5, …]

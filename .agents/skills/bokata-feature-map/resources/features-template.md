@@ -4,9 +4,10 @@
 
 <!-- The backbone uses bokata-feature-mapper's output format unchanged; each User Task carries
      its functional ACs (bokata-acceptance-criteria --functional) right below it, and each
-     Feature ends with an "Increment options" section that bokata-slice fills.
+     Feature ends with a one-line `**Slice:**` summary that bokata-slice fills. This file is the
+     summary: the slicing (Steps, options, increments, backlog) lives in slices/<nn>-<name>.md.
      Single mode (bokata-slice from a pitch) writes `<!-- Mode: single -->` and keeps only the
-     one Feature's header, Purpose, User Task names and Increment options. -->
+     one Feature's header, Purpose, User Task names and Slice line. -->
 
 ## Features Backbone
 
@@ -50,10 +51,8 @@ The system [description of what it executes and what it produces].
 - [State name]: [Description]
 - [State name]: [Description]
 
-##### Increment options
-<!-- Filled by bokata-slice the first time this Feature is sliced. One line per option:
-     - [skeleton] {FEAT}-a: [what the user can do or see] → {nn-slice}   (taken by that slice)
-     - {FEAT}-b: [what the user can do or see]                           (still in the backlog) -->
+**Slice:** not sliced yet
+<!-- Set by bokata-slice: → {nn-name} · {taken}/{total} options · next: {bite ID} {bite title} [· done] -->
 
 ---
 

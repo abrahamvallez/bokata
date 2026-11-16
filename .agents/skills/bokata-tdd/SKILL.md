@@ -86,9 +86,9 @@ implemented" without the test and commit that prove it, and record the real gate
 
 ## Working from a bokata slice
 
-If your input is `slices/<nn>-<name>.md`: check off each plan step **in the same commit** as
-the step, fill the increment's `Tests:` lines (scenario → its acceptance test), and keep the scope's
-`Unknowns` current. Tests are named by behaviour in the domain's words — never by an
+If your input is `slices/<nn>-<name>.md` (its plan is in the initiative's `plan.md`): check off each
+plan step there **in the same commit** as the step, fill the increment's `Tests:` lines in `plan.md`
+(scenario → its acceptance test), and keep the increment's `Unknowns` current in the slice. Tests are named by behaviour in the domain's words — never by an
 acceptance-criterion ID.
 
 ## Stop and ask

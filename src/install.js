@@ -26,7 +26,8 @@ const AGENTS = [
   'bokata-product-engineer',
   'code-executor',
   'design-reviewer',
-  'story-map-renderer'
+  'story-map-renderer',
+  'feature-slicer'
 ];
 
 const ROLES = ['trio', 'executor', 'reviewer', 'render'];
