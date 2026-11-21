@@ -31,5 +31,13 @@
   "license": "MIT",
   "engines": {
     "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abrahamvallez/bokata.git"
+  },
+  "homepage": "https://github.com/abrahamvallez/bokata#readme",
+  "bugs": {
+    "url": "https://github.com/abrahamvallez/bokata/issues"
   }
 }
