@@ -32,4 +32,5 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - run: npm ci
       - run: npm install -g npm@latest # trusted publishing needs npm >=11.5.1
-      - run: npm publish
+      # npm >= 11 refuses a prerelease version without a tag: GitHub prereleases go to `beta`
+      - run: npm publish --tag ${{ github.event.release.prerelease && 'beta' || 'latest' }}
